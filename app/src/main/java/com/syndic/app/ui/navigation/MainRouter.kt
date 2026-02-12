@@ -13,26 +13,39 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.syndic.app.data.local.entity.UserRole
 import com.syndic.app.ui.auth.AuthViewModel
 import com.syndic.app.ui.dashboard.CockpitScreen
+import com.syndic.app.ui.setup.SetupScreen
 
 @Composable
 fun MainRouter(
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    routerViewModel: RouterViewModel = hiltViewModel() // New ViewModel for global routing state
 ) {
-    val uiState by authViewModel.uiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsState()
+    val routerState by routerViewModel.state.collectAsState()
 
-    if (uiState.isLoading) {
+    if (routerState.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
-    } else if (!uiState.isAuthenticated) {
-        // Show Login Screen (Placeholder for now, redirecting to simple text)
+    } else if (!routerState.isSetupComplete) {
+        // Show Setup Wizard if not configured
+        SetupScreen(
+            onSetupComplete = { routerViewModel.refreshSetupState() }
+        )
+    } else if (authState.isLoading) {
+         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else if (!authState.isAuthenticated) {
+        // Show Login Screen (Placeholder for now)
         // In real app: LoginScreen(onLoginSuccess = { ... })
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Login Screen Placeholder")
+             // TODO: Integrate Login Screen in next Phase
+            Text("Login Screen Placeholder - System Configured")
         }
     } else {
-        // Role Dispatcher
-        when (uiState.userRole) {
+        // Role Dispatcher (Authenticated and Configured)
+        when (authState.userRole) {
             UserRole.SYNDIC, UserRole.ADJOINT -> {
                 CockpitScreen()
             }

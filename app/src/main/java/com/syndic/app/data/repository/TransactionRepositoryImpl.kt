@@ -3,113 +3,100 @@ package com.syndic.app.data.repository
 import com.syndic.app.data.local.dao.TransactionDao
 import com.syndic.app.data.local.entity.TransactionEntity
 import com.syndic.app.data.local.entity.TransactionType
+import com.syndic.app.domain.repository.ConfigRepository
 import com.syndic.app.domain.repository.TransactionRepository
-import io.github.jan.supabase.gotrue.Auth
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.Serializable
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
+import java.util.Calendar
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.math.abs
+import javax.inject.Singleton
 
-@Serializable
-data class TransactionDto(
-    val id: String,
-    val user_id: String?,
-    val amount: Double,
-    val type: String,
-    val label: String,
-    val date: String,
-    val created_at: String? = null
-)
-
+@Singleton
 class TransactionRepositoryImpl @Inject constructor(
     private val transactionDao: TransactionDao,
-    private val postgrest: Postgrest,
-    private val auth: Auth
+    private val configRepository: ConfigRepository
 ) : TransactionRepository {
 
     override fun getGlobalBalance(): Flow<Double> {
-        // Solde GLOBAL (Caisse) = Somme(PAIEMENTS de tous les résidents) + Somme(DEPENSES globales)
-        return transactionDao.getGlobalBalance().map { it ?: 0.0 }
+        return transactionDao.getAllTransactions().map { list ->
+            list.sumOf {
+                when (it.type) {
+                    TransactionType.PAIEMENT -> it.amount
+                    TransactionType.DEPENSE -> -it.amount
+                    else -> 0.0
+                }
+            }
+        }
     }
 
     override fun getUserBalance(userId: String): Flow<Double> {
-        // Solde RÉSIDENT = Somme(COTISATIONS) + Somme(PAIEMENTS)
-        return transactionDao.getUserBalance(userId).map { it ?: 0.0 }
+        return transactionDao.getUserTransactions(userId).map { list ->
+            list.sumOf {
+                when (it.type) {
+                    TransactionType.COTISATION -> -it.amount // Due
+                    TransactionType.PAIEMENT -> it.amount    // Paid
+                    else -> 0.0
+                }
+            }
+        }
     }
 
     override suspend fun getRunway(): Double {
-        // Formule : (Solde Global Trésorerie) / (Moyenne des transactions de type 'DEPENSE' des 3 derniers mois).
-        val currentBalance = getGlobalBalance().first()
-
-        val threeMonthsAgo = Date.from(Instant.now().minus(90, ChronoUnit.DAYS))
-        val recentExpenses = transactionDao.getExpensesSince(threeMonthsAgo)
-
-        if (recentExpenses.isEmpty()) {
-            return Double.MAX_VALUE // Infinite runway
+        val allTx = transactionDao.getAllTransactionsSync()
+        val currentBalance = allTx.sumOf {
+            when (it.type) {
+                TransactionType.PAIEMENT -> it.amount
+                TransactionType.DEPENSE -> -it.amount
+                else -> 0.0
+            }
         }
 
-        val totalExpenses = recentExpenses.sumOf { abs(it.amount) } // Ensure positive magnitude for calculation
-        val monthlyAverage = totalExpenses / 3.0
+        val config = configRepository.getConfig().firstOrNull()
+        val monthlyBurn = if (config != null) {
+            config.conciergeSalary +
+            config.cleaningCost +
+            config.maintenanceCost +
+            config.otherFixedCosts
+        } else {
+            0.0
+        }
 
-        if (monthlyAverage == 0.0) return Double.MAX_VALUE
+        if (monthlyBurn <= 0) return if (currentBalance > 0) 99.9 else 0.0
 
-        return currentBalance / monthlyAverage
+        return (currentBalance / monthlyBurn).coerceAtLeast(0.0)
     }
 
     override suspend fun getRecoveryRate(): Double {
-        // Taux de Recouvrement : (Total Payé / Total Dû) * 100.
-        // Total Dû = Abs(Sum(COTISATION))
-        // Total Payé = Sum(PAIEMENT)
+        val allTx = transactionDao.getAllTransactionsSync()
 
-        val totalDue = abs(transactionDao.getSumByType(TransactionType.COTISATION) ?: 0.0)
-        val totalPaid = transactionDao.getSumByType(TransactionType.PAIEMENT) ?: 0.0
+        val totalDue = allTx.filter { it.type == TransactionType.COTISATION }.sumOf { it.amount }
+        val totalPaid = allTx.filter { it.type == TransactionType.PAIEMENT }.sumOf { it.amount }
 
-        if (totalDue == 0.0) return 100.0 // Nothing due means 100% recovered (or undefined, but 100 is safer for UI)
+        if (totalDue <= 0) return 100.0
 
-        return (totalPaid / totalDue) * 100.0
+        return ((totalPaid / totalDue) * 100).coerceIn(0.0, 100.0)
     }
 
-    override suspend fun createTransaction(userId: String?, amount: Double, type: TransactionType, label: String): Result<Unit> {
+    override suspend fun createTransaction(
+        userId: String?,
+        amount: Double,
+        type: TransactionType,
+        label: String
+    ): Result<Unit> {
         return try {
-            val transactionId = UUID.randomUUID().toString()
-            val now = Date()
-
-            val entity = TransactionEntity(
-                id = transactionId,
+            val tx = TransactionEntity(
+                id = UUID.randomUUID().toString(),
                 userId = userId,
                 amount = amount,
                 type = type,
                 label = label,
-                date = now,
-                createdAt = now
+                date = Date(),
+                createdAt = Date()
             )
-
-            // Save locally
-            transactionDao.insertTransaction(entity)
-
-            // Sync to Supabase
-            val dto = TransactionDto(
-                id = transactionId,
-                user_id = userId,
-                amount = amount,
-                type = type.name,
-                label = label,
-                date = now.toInstant().toString(),
-                created_at = now.toInstant().toString()
-            )
-
-            postgrest.from("transactions").insert(dto)
-
+            transactionDao.insertTransaction(tx)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -117,37 +104,31 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncTransactions(): Result<Unit> {
-        return try {
-            val result = postgrest.from("transactions").select().decodeList<TransactionDto>()
-
-            val entities = result.map { dto ->
-                TransactionEntity(
-                    id = dto.id,
-                    userId = dto.user_id,
-                    amount = dto.amount,
-                    type = try { TransactionType.valueOf(dto.type) } catch (e: Exception) { TransactionType.COTISATION }, // Fallback risky but better than crash
-                    label = dto.label,
-                    date = Date.from(Instant.parse(dto.date)),
-                    createdAt = dto.created_at?.let { Date.from(Instant.parse(it)) }
-                )
-            }
-
-            if (entities.isNotEmpty()) {
-                transactionDao.insertTransactions(entities)
-            }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return Result.success(Unit)
     }
 
     override suspend fun hasCotisationForMonth(userId: String, monthDate: Date): Boolean {
-        // Convert Date to Start and End of Month
-        val localDate = monthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-        val startOfMonth = Date.from(localDate.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant())
-        val endOfMonth = Date.from(localDate.withDayOfMonth(localDate.lengthOfMonth()).atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant())
+        // Calculate Start and End of the given month
+        val cal = Calendar.getInstance()
+        cal.time = monthDate
+        cal.set(Calendar.DAY_OF_MONTH, 1)
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val startDate = cal.time
 
-        val count = transactionDao.countCotisationsInMonth(userId, startOfMonth, endOfMonth)
+        // End of month: Add 1 month, then subtract 1ms
+        cal.add(Calendar.MONTH, 1)
+        cal.add(Calendar.MILLISECOND, -1)
+        val endDate = cal.time
+
+        val count = transactionDao.countTransactionsInRange(
+            userId = userId,
+            type = TransactionType.COTISATION,
+            startDate = startDate,
+            endDate = endDate
+        )
         return count > 0
     }
 }
