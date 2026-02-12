@@ -20,7 +20,7 @@ import com.syndic.app.data.local.entity.UserEntity
         ResidenceConfigEntity::class,
         TransactionEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(RoomTypeConverters::class)
