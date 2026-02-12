@@ -56,6 +56,15 @@ android {
         compose = true
         buildConfig = true
     }
+
+    testOptions {
+        unitTests.all {
+            it.testLogging {
+                events("passed", "skipped", "failed")
+                showStandardStreams = true
+            }
+        }
+    }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
