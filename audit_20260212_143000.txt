@@ -1,0 +1,145 @@
+================================================================================
+AUDIT TECHNIQUE APPROFONDI - SYNDIC APP
+Date : 12 Février 2026 - 14:30
+Version : 1.0.0-beta (Phase 4 Completed)
+Auteur : Jules (Architecte Senior Android)
+================================================================================
+
+1. ARBORESCENCE COMPLÈTE DU PROJET
+--------------------------------------------------------------------------------
+Le projet suit une architecture Clean Architecture stricte (UI / Domain / Data) dans un module unique :app.
+
+./app/src/main/java/com/syndic/app
+├── SyndicApplication.kt          <- Point d'entrée Hilt & Configuration WorkManager
+├── di/                           <- Injection de Dépendances (Hilt Modules)
+│   ├── DatabaseModule.kt         <- Promeut AppDatabase & DAOs
+│   ├── RepositoryModule.kt       <- Binds Implementations to Interfaces
+│   ├── SupabaseModule.kt         <- Client Supabase (Auth, Postgrest)
+│   └── WorkManagerModule.kt      <- Provide WorkManager instance
+├── data/                         <- Couche Data (Implémentation)
+│   ├── local/                    <- Room Database
+│   │   ├── AppDatabase.kt
+│   │   ├── converter/            <- TypeConverters (Enums, Date <-> Long)
+│   │   ├── dao/                  <- Data Access Objects (User, Incident, Transaction, Config)
+│   │   └── entity/               <- Tables SQL/Room (UserEntity, IncidentEntity, etc.)
+│   └── repository/               <- Implémentation des Repositories
+│       ├── IncidentRepositoryImpl.kt
+│       ├── TransactionRepositoryImpl.kt
+│       └── UserRepositoryImpl.kt
+├── domain/                       <- Couche Domain (Interfaces & Business Logic)
+│   ├── model/                    <- (Vide pour l'instant, modèles partagés avec Data)
+│   └── repository/               <- Interfaces (Contrats)
+│       ├── IncidentRepository.kt
+│       ├── TransactionRepository.kt
+│       └── UserRepository.kt
+├── worker/                       <- WorkManager (Tâches de fond)
+│   ├── MonthlyDebitWorker.kt     <- Débit automatique le 1er du mois
+│   ├── SyncIncidentsWorker.kt    <- Synchro descendante (Download)
+│   └── UploadIncidentWorker.kt   <- Synchro montante (Upload immédiat)
+└── ui/                           <- Couche Présentation (Jetpack Compose)
+    ├── MainActivity.kt           <- Activité unique, host du MainRouter
+    ├── navigation/
+    │   └── MainRouter.kt         <- Dispatcher de Rôles (Syndic vs Resident)
+    ├── theme/                    <- Design System "Night Cockpit"
+    │   ├── Color.kt              <- Palette (NightBlue, Gold, Cyan, Rose)
+    │   ├── Theme.kt              <- Material3 Dark Theme forcé
+    │   └── Type.kt               <- Typographie (Serif Titles, Monospace Data)
+    ├── common/
+    │   └── UiState.kt            <- Wrapper générique (Loading/Success/Error)
+    ├── auth/
+    │   ├── AuthViewModel.kt      <- Logique de Connexion & Session
+    │   └── AuthUiState.kt
+    ├── dashboard/                <- Écran COCKPIT (Syndic)
+    │   ├── CockpitScreen.kt      <- Vue principale
+    │   ├── DashboardViewModel.kt <- Agrégation des KPIs financiers
+    │   └── DashboardUiState.kt
+    ├── matrix/                   <- Grille des Résidents
+    │   ├── MatrixViewModel.kt    <- Calculs État Résident (Red/Green)
+    │   └── MatrixUiState.kt
+    ├── incident/                 <- Gestion Incidents
+    │   ├── IncidentViewModel.kt
+    │   └── IncidentUiState.kt
+    └── components/               <- Composants UI Réutilisables
+        ├── BottomNavBar.kt
+        ├── CashFlowChart.kt      <- Canvas Graphique
+        ├── CockpitHeader.kt
+        ├── KpiCard.kt            <- Carte KPI avec bordure Néon
+        ├── RecoveryGauge.kt      <- Canvas Jauge Circulaire
+        └── ResidentMatrixGrid.kt <- Grille 3x5
+
+2. ANALYSE LOGIQUE & FLUX DE DONNÉES
+--------------------------------------------------------------------------------
+
+A. NAVIGATION & SÉCURITÉ
+   - Entry Point : `MainActivity` appelle `MainRouter`.
+   - `MainRouter` observe `AuthViewModel.uiState`.
+   - Si `isAuthenticated` + `role == SYNDIC` -> Affiche `CockpitScreen`.
+   - Si `isAuthenticated` + `role == RESIDENT` -> Affiche Placeholder (Sécurité par isolation).
+
+B. LE "COCKPIT" (DashboardViewModel)
+   - Ce ViewModel est le cerveau financier. Il observe `TransactionRepository`.
+   - Flux :
+     1. `TransactionRepository.getGlobalBalance()` (Flow) -> UI State `globalBalance`.
+     2. `TransactionRepository.getRunway()` (Suspend) -> UI State `runwayMonths`.
+     3. `TransactionRepository.getRecoveryRate()` (Suspend) -> UI State `recoveryRate`.
+   - Rafraîchissement : Les Flows mettent à jour l'UI en temps réel si la DB locale change.
+
+C. LA MATRICE (MatrixViewModel)
+   - But : Afficher l'état de santé de chaque appartement (AP1-AP15).
+   - Logique :
+     1. Récupère tous les résidents via `UserRepository.getAllUsers()`.
+     2. Pour chaque résident, récupère son solde via `TransactionRepository.getUserBalance(id)`.
+     3. Applique la règle visuelle : Si `balance >= 0` -> VERT (UpToDate), sinon ROUGE (Debt).
+
+3. AUDIT DES RÉGLAGES DE CALCULS (DÉTAILS FINS)
+--------------------------------------------------------------------------------
+Les formules sont implémentées en dur dans `TransactionRepositoryImpl` pour garantir la conformité comptable.
+
+A. SOLDE GLOBAL (CASH FLOW)
+   - Formule : `SUM(Transactions WHERE type IN ('PAIEMENT', 'DEPENSE'))`
+   - Spécificité : Les `COTISATIONS` (Dettes générées) sont EXCLUES. On ne compte que l'argent réel.
+   - Source : `TransactionDao.getGlobalBalance()`
+
+B. RUNWAY (SURVIE)
+   - Formule : `Solde Global / Moyenne Dépenses Mensuelles (3 derniers mois)`
+   - Implémentation :
+     1. Récupère les dépenses > `Now - 90 jours`.
+     2. Somme les valeurs absolues.
+     3. Divise par 3.0 pour obtenir la moyenne mensuelle.
+     4. Divise le Solde Global par cette moyenne.
+   - Cas limite : Si moyenne = 0, retourne `Double.MAX_VALUE` (Infini).
+
+C. RECOUVREMENT (RECOVERY RATE)
+   - Formule : `(Total PAIEMENT / Total |COTISATION|) * 100`
+   - Logique : Mesure l'efficacité de la collecte.
+   - Note : Utilise `TransactionDao.getSumByType()` pour la performance.
+
+D. DÉBIT AUTOMATIQUE (WORKER)
+   - Classe : `MonthlyDebitWorker`
+   - Trigger : Exécution périodique (WorkManager).
+   - Idempotence : Avant d'insérer, exécute `countCotisationsInMonth(userId, startOfMonth, endOfMonth)`. Si > 0, ne fait RIEN.
+   - Montant : Fixé à -250.00 DH (Hardcoded pour MVP).
+
+4. DÉTECTION D'ORPHELINS & DETTE TECHNIQUE
+--------------------------------------------------------------------------------
+Fichiers ou classes présents mais non utilisés activement dans le flux principal :
+
+1. `SyncIncidentsWorker.kt` :
+   - Statut : Implémenté mais non planifié.
+   - Impact : Le "Download" automatique en arrière-plan ne se lance pas (sauf si déclenché manuellement). Pour l'instant, l'app compte sur le lancement pour rafraîchir ou des actions manuelles.
+   - Action recommandée : Ajouter un `PeriodicWorkRequest` dans `SyndicApplication` ou au login.
+
+2. `ResidenceConfigEntity` / `ResidenceConfigDao` :
+   - Statut : Table créée, DAO créé.
+   - Usage : Nul. Le nom "Amandier B" et les frais (250 DH) sont hardcodés dans le SQL seed et le Worker.
+   - Action recommandée : Connecter le `MonthlyDebitWorker` à cette table pour rendre le montant dynamique.
+
+5. CONCLUSION DE L'AUDIT
+--------------------------------------------------------------------------------
+Le système est **cohérent et fonctionnel**.
+- L'architecture UI -> ViewModel -> Repository -> Room est propre.
+- Les calculs financiers sont vérifiés par tests unitaires (cf. Phase 3).
+- L'interface respecte le design system "Night Cockpit".
+- La sécurité des rôles est assurée au niveau du Router.
+
+Le projet est prêt pour le déploiement et les tests utilisateurs.
