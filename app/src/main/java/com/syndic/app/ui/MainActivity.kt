@@ -3,7 +3,8 @@ package com.syndic.app.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Text
+import com.syndic.app.ui.navigation.MainRouter
+import com.syndic.app.ui.theme.SyndicAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -11,7 +12,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-             Text("Syndic App Initialized")
+            SyndicAppTheme {
+                MainRouter()
+            }
         }
     }
 }
