@@ -48,21 +48,7 @@ class UserRepositoryImpl @Inject constructor(
                 }
             }.decodeSingle<UserDto>()
 
-            val entity = UserEntity(
-                id = result.id,
-                email = result.email,
-                firstName = result.first_name,
-                lastName = result.last_name,
-                role = try { UserRole.valueOf(result.role) } catch (e: Exception) { UserRole.RESIDENT },
-                building = result.building,
-                apartmentNumber = result.apartment_number,
-                phoneNumber = null,
-                cin = null,
-                mandateStartDate = null,
-                createdAt = result.created_at?.let { Date.from(Instant.parse(it)) },
-                updatedAt = result.updated_at?.let { Date.from(Instant.parse(it)) }
-            )
-
+            val entity = mapDtoToEntity(result)
             userDao.insertUser(entity)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -85,15 +71,32 @@ class UserRepositoryImpl @Inject constructor(
                 apartment_number = apartment
             )
 
-            // Using upsert to avoid conflict with the SQL Trigger which might have already created the profile
             postgrest.from("profiles").upsert(dto)
-
-            // Sync immediately to local DB
             syncUser()
-
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun getAllUsers(): List<UserEntity> {
+        return userDao.getAllUsersSync()
+    }
+
+    private fun mapDtoToEntity(dto: UserDto): UserEntity {
+        return UserEntity(
+            id = dto.id,
+            email = dto.email,
+            firstName = dto.first_name,
+            lastName = dto.last_name,
+            role = try { UserRole.valueOf(dto.role) } catch (e: Exception) { UserRole.RESIDENT },
+            building = dto.building,
+            apartmentNumber = dto.apartment_number,
+            phoneNumber = null,
+            cin = null,
+            mandateStartDate = null,
+            createdAt = dto.created_at?.let { Date.from(Instant.parse(it)) },
+            updatedAt = dto.updated_at?.let { Date.from(Instant.parse(it)) }
+        )
     }
 }

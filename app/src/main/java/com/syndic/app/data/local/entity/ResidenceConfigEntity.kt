@@ -2,7 +2,6 @@ package com.syndic.app.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.math.BigDecimal
 import java.util.Date
 
 @Entity(tableName = "residence_config")
