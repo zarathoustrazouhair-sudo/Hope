@@ -137,11 +137,6 @@ fun ResidentHomeScreen(
                         text = emoji,
                         fontSize = 48.sp
                     )
-                     Text(
-                        text = "Survie: ${String.format("%.1f", state.runwayMonths)} mois",
-                        color = Color.Gray,
-                        fontSize = 12.sp
-                    )
                 }
             }
 

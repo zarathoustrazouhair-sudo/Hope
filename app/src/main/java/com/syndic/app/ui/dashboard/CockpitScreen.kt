@@ -67,13 +67,25 @@ fun CockpitScreen(
                     title = "SOLDE GLOBAL",
                     value = "${dashboardState.globalBalance} DH",
                     borderColor = Gold,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = {}
                 )
+
+                val runway = dashboardState.runwayMonths
+                val runwayEmoji = when {
+                    runway >= 6 -> "😎"
+                    runway >= 3 -> "🙂"
+                    runway >= 1 -> "😐"
+                    else -> "😱"
+                }
+
                 KpiCard(
                     title = "SURVIE",
-                    value = String.format("%.1f MOIS", dashboardState.runwayMonths),
+                    value = String.format("%.1f MOIS", runway),
                     borderColor = CyanNeon,
-                    modifier = Modifier.weight(1f)
+                    icon = runwayEmoji,
+                    modifier = Modifier.weight(1f),
+                    onClick = { /* Navigate to Finance */ }
                 )
             }
 
@@ -90,7 +102,8 @@ fun CockpitScreen(
                     title = "TÂCHES",
                     value = "0", // Placeholder
                     borderColor = Slate, // Neutral
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = {}
                 )
 
                 val incidentCount = incidentState.incidents.size
@@ -100,7 +113,8 @@ fun CockpitScreen(
                     title = "INCIDENTS",
                     value = "$incidentCount",
                     borderColor = incidentBorderColor,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = {}
                 )
             }
 
