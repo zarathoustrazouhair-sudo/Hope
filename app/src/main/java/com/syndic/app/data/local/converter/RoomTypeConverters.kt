@@ -3,6 +3,7 @@ package com.syndic.app.data.local.converter
 import androidx.room.TypeConverter
 import com.syndic.app.data.local.entity.IncidentPriority
 import com.syndic.app.data.local.entity.IncidentStatus
+import com.syndic.app.data.local.entity.TransactionType
 import com.syndic.app.data.local.entity.UserRole
 import java.util.Date
 
@@ -46,5 +47,15 @@ class RoomTypeConverters {
     @TypeConverter
     fun incidentPriorityToString(priority: IncidentPriority?): String? {
         return priority?.name
+    }
+
+    @TypeConverter
+    fun fromTransactionType(value: String?): TransactionType? {
+        return value?.let { enumValueOf<TransactionType>(it) }
+    }
+
+    @TypeConverter
+    fun transactionTypeToString(type: TransactionType?): String? {
+        return type?.name
     }
 }

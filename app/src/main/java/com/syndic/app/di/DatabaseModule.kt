@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.syndic.app.data.local.AppDatabase
 import com.syndic.app.data.local.dao.IncidentDao
 import com.syndic.app.data.local.dao.ResidenceConfigDao
+import com.syndic.app.data.local.dao.TransactionDao
 import com.syndic.app.data.local.dao.UserDao
 import dagger.Module
 import dagger.Provides
@@ -24,7 +25,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "syndic_app.db"
-        ).fallbackToDestructiveMigration() // For MVP simplicity
+        ).fallbackToDestructiveMigration()
          .build()
     }
 
@@ -36,4 +37,7 @@ object DatabaseModule {
 
     @Provides
     fun provideResidenceConfigDao(database: AppDatabase): ResidenceConfigDao = database.residenceConfigDao()
+
+    @Provides
+    fun provideTransactionDao(database: AppDatabase): TransactionDao = database.transactionDao()
 }

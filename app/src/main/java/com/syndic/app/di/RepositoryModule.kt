@@ -1,8 +1,10 @@
 package com.syndic.app.di
 
 import com.syndic.app.data.repository.IncidentRepositoryImpl
+import com.syndic.app.data.repository.TransactionRepositoryImpl
 import com.syndic.app.data.repository.UserRepositoryImpl
 import com.syndic.app.domain.repository.IncidentRepository
+import com.syndic.app.domain.repository.TransactionRepository
 import com.syndic.app.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -25,4 +27,10 @@ abstract class RepositoryModule {
     abstract fun bindUserRepository(
         userRepositoryImpl: UserRepositoryImpl
     ): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionRepository(
+        transactionRepositoryImpl: TransactionRepositoryImpl
+    ): TransactionRepository
 }
