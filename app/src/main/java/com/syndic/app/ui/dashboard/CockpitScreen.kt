@@ -40,7 +40,7 @@ fun CockpitScreen(
     incidentViewModel: IncidentViewModel = hiltViewModel()
 ) {
     val dashboardState by dashboardViewModel.uiState.collectAsState()
-    val matrixState by matrixViewModel.uiState.collectAsState()
+    val matrixState by matrixViewModel.state.collectAsState()
     val incidentState by incidentViewModel.uiState.collectAsState()
 
     Scaffold(

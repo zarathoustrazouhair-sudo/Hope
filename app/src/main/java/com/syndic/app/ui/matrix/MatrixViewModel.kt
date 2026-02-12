@@ -2,26 +2,41 @@ package com.syndic.app.ui.matrix
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.syndic.app.data.local.entity.UserRole
+import com.syndic.app.domain.repository.ConfigRepository
 import com.syndic.app.domain.repository.TransactionRepository
 import com.syndic.app.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class MatrixState(
+    val residents: List<ResidentStatus> = emptyList(),
+    val isLoading: Boolean = false // Default to false
+)
+
+data class ResidentStatus(
+    val apartment: String,
+    val balance: Double,
+    val statusColor: MatrixColor
+)
+
+enum class MatrixColor {
+    GOLD, GREEN, RED
+}
 
 @HiltViewModel
 class MatrixViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val configRepository: ConfigRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(MatrixUiState())
-    val uiState: StateFlow<MatrixUiState> = _uiState.asStateFlow()
+    private val _state = MutableStateFlow(MatrixState(isLoading = true))
+    val state: StateFlow<MatrixState> = _state.asStateFlow()
 
     init {
         loadMatrix()
@@ -29,41 +44,40 @@ class MatrixViewModel @Inject constructor(
 
     private fun loadMatrix() {
         viewModelScope.launch {
-            try {
-                // Fetch all residents (assuming they are synced locally)
-                // Filter for RESIDENT role (or include all if needed for matrix)
-                val users = userRepository.getAllUsers()
-                    .filter { it.role == UserRole.RESIDENT }
-                    .sortedBy { it.apartmentNumber.toIntOrNull() ?: 999 } // Sort by Apartment Number
-
-                val matrixItems = users.map { user ->
-                    // Fetch balance for each user
-                    val balance = transactionRepository.getUserBalance(user.id).first()
-
-                    MatrixItemUiState(
-                        userId = user.id,
-                        firstName = user.firstName,
-                        lastName = user.lastName,
-                        apartmentNumber = user.apartmentNumber,
-                        balance = balance,
-                        isUpToDate = balance >= 0
-                    )
+            val allUsers = userRepository.getAllUsers()
+            // Filter only residents AP1-AP15 or similar pattern
+            val residents = allUsers.filter { it.apartmentNumber.startsWith("AP") }
+                .sortedBy {
+                    // Safely extract number part
+                    it.apartmentNumber.replace("AP", "").trim().toIntOrNull() ?: 999
                 }
 
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        residents = matrixItems
-                    )
+            val config = configRepository.getConfig().firstOrNull()
+            val monthlyFee = config?.monthlyFee ?: 0.0
+
+            val statuses = residents.map { user ->
+                // Collect the first value of the Flow
+                val balance = transactionRepository.getUserBalance(user.id).firstOrNull() ?: 0.0
+
+                // Tricolor Logic:
+                // GOLD: Solde > 3 * Monthly Fee (3 months advance)
+                // GREEN: Solde >= 0 (Up to date)
+                // RED: Solde < 0 (In Debt)
+
+                val color = when {
+                    balance >= (3 * monthlyFee) && monthlyFee > 0 -> MatrixColor.GOLD
+                    balance >= 0 -> MatrixColor.GREEN
+                    else -> MatrixColor.RED
                 }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = e.message
-                    )
-                }
+
+                ResidentStatus(
+                    apartment = user.apartmentNumber,
+                    balance = balance,
+                    statusColor = color
+                )
             }
+
+            _state.value = MatrixState(residents = statuses, isLoading = false)
         }
     }
 }

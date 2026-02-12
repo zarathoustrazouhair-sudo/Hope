@@ -17,20 +17,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.syndic.app.ui.matrix.MatrixItemUiState
+import com.syndic.app.ui.matrix.MatrixColor
+import com.syndic.app.ui.matrix.ResidentStatus
 import com.syndic.app.ui.theme.CyanNeon
+import com.syndic.app.ui.theme.Gold
 import com.syndic.app.ui.theme.RoseNeon
 import com.syndic.app.ui.theme.Slate
 
 @Composable
 fun ResidentMatrixGrid(
-    residents: List<MatrixItemUiState>,
+    residents: List<ResidentStatus>,
     onResidentClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+        columns = GridCells.Fixed(3), // 3 Columns
         modifier = modifier
     ) {
         items(residents) { resident ->
@@ -41,25 +44,29 @@ fun ResidentMatrixGrid(
 
 @Composable
 fun ResidentMatrixCell(
-    resident: MatrixItemUiState,
+    resident: ResidentStatus,
     onClick: (String) -> Unit
 ) {
-    val borderColor = if (resident.isUpToDate) CyanNeon else RoseNeon
+    val borderColor = when (resident.statusColor) {
+        MatrixColor.GOLD -> Gold
+        MatrixColor.GREEN -> CyanNeon
+        MatrixColor.RED -> RoseNeon
+    }
 
     Box(
         modifier = Modifier
             .padding(4.dp)
-            .aspectRatio(1f)
+            .aspectRatio(1f) // Square cells
             .clip(RoundedCornerShape(8.dp))
-            .background(Slate)
-            .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(8.dp))
-            .clickable { onClick(resident.userId) },
+            .background(Slate) // Base color
+            .border(BorderStroke(2.dp, borderColor), RoundedCornerShape(8.dp))
+            .clickable { onClick(resident.apartment) },
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "AP${resident.apartmentNumber}",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface
+            text = resident.apartment,
+            style = MaterialTheme.typography.titleMedium,
+            color = Color.White
         )
     }
 }

@@ -5,12 +5,14 @@ import com.syndic.app.data.local.entity.UserEntity
 import com.syndic.app.data.local.entity.UserRole
 import com.syndic.app.domain.repository.UserRepository
 import io.github.jan.supabase.gotrue.Auth
+import io.github.jan.supabase.gotrue.SessionStatus
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
+import javax.inject.Singleton
 import java.time.Instant
 import java.util.Date
 
@@ -27,6 +29,7 @@ data class UserDto(
     val updated_at: String? = null
 )
 
+@Singleton
 class UserRepositoryImpl @Inject constructor(
     private val userDao: UserDao,
     private val postgrest: Postgrest,
@@ -34,7 +37,9 @@ class UserRepositoryImpl @Inject constructor(
 ) : UserRepository {
 
     override fun getCurrentUser(): Flow<UserEntity?> {
-        val currentUser = auth.currentUserOrNull() ?: return flowOf(null)
+        // For Offline-First MVP, we might rely on a session manager, but here we check Supabase auth
+        val currentUser = auth.currentUserOrNull()
+        if (currentUser == null) return flowOf(null)
         return userDao.getUser(currentUser.id)
     }
 
@@ -83,6 +88,14 @@ class UserRepositoryImpl @Inject constructor(
         return userDao.getAllUsersSync()
     }
 
+    override suspend fun createUser(user: UserEntity) {
+        userDao.insertUser(user)
+    }
+
+    override suspend fun getUserByApartment(apartment: String): UserEntity? {
+        return userDao.getUserByApartment(apartment)
+    }
+
     private fun mapDtoToEntity(dto: UserDto): UserEntity {
         return UserEntity(
             id = dto.id,
@@ -95,6 +108,7 @@ class UserRepositoryImpl @Inject constructor(
             phoneNumber = null,
             cin = null,
             mandateStartDate = null,
+            pinHash = null, // Sync from Supabase doesn't include PIN hash usually (security)
             createdAt = dto.created_at?.let { Date.from(Instant.parse(it)) },
             updatedAt = dto.updated_at?.let { Date.from(Instant.parse(it)) }
         )

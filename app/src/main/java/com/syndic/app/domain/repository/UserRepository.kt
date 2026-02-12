@@ -8,4 +8,6 @@ interface UserRepository {
     suspend fun syncUser(): Result<Unit>
     suspend fun createUserProfile(firstName: String, lastName: String, building: String, apartment: String): Result<Unit>
     suspend fun getAllUsers(): List<UserEntity>
+    suspend fun createUser(user: UserEntity) // For offline seeding
+    suspend fun getUserByApartment(apartment: String): UserEntity?
 }

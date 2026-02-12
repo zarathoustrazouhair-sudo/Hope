@@ -19,6 +19,10 @@ interface UserDao {
     @Query("SELECT * FROM users")
     suspend fun getAllUsersSync(): List<UserEntity>
 
+    // For Login by Apartment
+    @Query("SELECT * FROM users WHERE apartmentNumber = :apartment LIMIT 1")
+    suspend fun getUserByApartment(apartment: String): UserEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserEntity)
 

@@ -7,21 +7,35 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.syndic.app.data.local.entity.UserRole
 import com.syndic.app.ui.auth.AuthViewModel
 import com.syndic.app.ui.dashboard.CockpitScreen
+import com.syndic.app.ui.login.LoginScreen
+import com.syndic.app.ui.resident.ChangePinScreen
+import com.syndic.app.ui.resident.ResidentHomeScreen
 import com.syndic.app.ui.setup.SetupScreen
+
+enum class RouterDest {
+    DASHBOARD,
+    CHANGE_PIN
+}
 
 @Composable
 fun MainRouter(
     authViewModel: AuthViewModel = hiltViewModel(),
-    routerViewModel: RouterViewModel = hiltViewModel() // New ViewModel for global routing state
+    routerViewModel: RouterViewModel = hiltViewModel()
 ) {
     val authState by authViewModel.uiState.collectAsState()
     val routerState by routerViewModel.state.collectAsState()
+
+    // Simple internal navigation state for Resident flow
+    var currentDest by remember { mutableStateOf(RouterDest.DASHBOARD) }
 
     if (routerState.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -37,12 +51,12 @@ fun MainRouter(
             CircularProgressIndicator()
         }
     } else if (!authState.isAuthenticated) {
-        // Show Login Screen (Placeholder for now)
-        // In real app: LoginScreen(onLoginSuccess = { ... })
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-             // TODO: Integrate Login Screen in next Phase
-            Text("Login Screen Placeholder - System Configured")
-        }
+        // Show Login Screen
+        LoginScreen(
+            onLoginSuccess = { role ->
+                authViewModel.onLocalLoginSuccess(role)
+            }
+        )
     } else {
         // Role Dispatcher (Authenticated and Configured)
         when (authState.userRole) {
@@ -50,8 +64,10 @@ fun MainRouter(
                 CockpitScreen()
             }
             UserRole.RESIDENT -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Resident Home Screen Placeholder")
+                if (currentDest == RouterDest.CHANGE_PIN) {
+                    ChangePinScreen(onBack = { currentDest = RouterDest.DASHBOARD })
+                } else {
+                    ResidentHomeScreen(onChangePinClick = { currentDest = RouterDest.CHANGE_PIN })
                 }
             }
             UserRole.CONCIERGE -> {

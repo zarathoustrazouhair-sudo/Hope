@@ -20,7 +20,7 @@ import com.syndic.app.data.local.entity.UserEntity
         ResidenceConfigEntity::class,
         TransactionEntity::class
     ],
-    version = 3,
+    version = 4, // Bumped to 4 for pinHash in UserEntity
     exportSchema = false
 )
 @TypeConverters(RoomTypeConverters::class)

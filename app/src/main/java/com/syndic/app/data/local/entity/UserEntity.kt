@@ -11,7 +11,7 @@ enum class UserRole {
 @Entity(tableName = "users")
 data class UserEntity(
     @PrimaryKey
-    val id: String, // Maps to Supabase Auth UUID
+    val id: String, // Maps to Supabase Auth UUID or generated ID for offline
     val email: String,
     val firstName: String,
     val lastName: String,
@@ -20,7 +20,8 @@ data class UserEntity(
     val cin: String?, // Concierge only
     val mandateStartDate: Date?, // Syndic only
     val building: String,
-    val apartmentNumber: String,
+    val apartmentNumber: String, // AP1, AP2, etc.
+    val pinHash: String?, // SHA-256 Hash of resident PIN
     val createdAt: Date?,
     val updatedAt: Date?
 )

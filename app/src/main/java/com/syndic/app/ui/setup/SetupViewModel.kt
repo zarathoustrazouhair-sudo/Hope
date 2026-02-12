@@ -3,18 +3,24 @@ package com.syndic.app.ui.setup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syndic.app.data.local.entity.ResidenceConfigEntity
+import com.syndic.app.data.local.entity.UserEntity
+import com.syndic.app.data.local.entity.UserRole
 import com.syndic.app.domain.repository.ConfigRepository
+import com.syndic.app.domain.repository.UserRepository
 import com.syndic.app.util.SecurityUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Date
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class SetupViewModel @Inject constructor(
-    private val configRepository: ConfigRepository
+    private val configRepository: ConfigRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SetupState())
@@ -89,7 +95,7 @@ class SetupViewModel @Inject constructor(
                 }
             }
             SetupStep.SECURITY_CHECK -> {
-                saveConfig()
+                saveConfigAndSeed()
             }
             SetupStep.COMPLETE -> { /* No-op */ }
         }
@@ -119,13 +125,12 @@ class SetupViewModel @Inject constructor(
         }
     }
 
-    private fun saveConfig() {
+    private fun saveConfigAndSeed() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             val s = _state.value
 
-            // In a real app we would use UUID.randomUUID().toString()
-            // Here we use a fixed ID for the singleton config
+            // 1. Save Residence Configuration
             val config = ResidenceConfigEntity(
                 id = "config_v1",
                 residenceName = s.residenceName,
@@ -138,6 +143,29 @@ class SetupViewModel @Inject constructor(
             )
 
             configRepository.saveConfig(config)
+
+            // 2. Seed Resident Users (AP1 to AP15)
+            val defaultPinHash = SecurityUtils.hashPin("0000")
+            for (i in 1..15) {
+                val user = UserEntity(
+                    id = UUID.randomUUID().toString(),
+                    email = "ap$i@residence.com", // Placeholder email
+                    firstName = "Résident",
+                    lastName = "AP$i",
+                    role = UserRole.RESIDENT,
+                    building = s.residenceName,
+                    apartmentNumber = "AP$i",
+                    pinHash = defaultPinHash,
+                    phoneNumber = null,
+                    cin = null,
+                    mandateStartDate = null,
+                    createdAt = Date(),
+                    updatedAt = Date()
+                )
+                userRepository.createUser(user)
+            }
+
+            // 3. Complete
             _state.value = s.copy(isLoading = false, currentStep = SetupStep.COMPLETE)
         }
     }
