@@ -1,5 +1,6 @@
 package com.syndic.app.ui.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -16,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.syndic.app.data.local.entity.UserRole
 import com.syndic.app.ui.auth.AuthViewModel
 import com.syndic.app.ui.dashboard.CockpitScreen
+import com.syndic.app.ui.finance.FinanceScreen
 import com.syndic.app.ui.login.LoginScreen
 import com.syndic.app.ui.resident.ChangePinScreen
 import com.syndic.app.ui.resident.ResidentHomeScreen
@@ -23,7 +25,8 @@ import com.syndic.app.ui.setup.SetupScreen
 
 enum class RouterDest {
     DASHBOARD,
-    CHANGE_PIN
+    CHANGE_PIN,
+    FINANCE
 }
 
 @Composable
@@ -34,7 +37,7 @@ fun MainRouter(
     val authState by authViewModel.uiState.collectAsState()
     val routerState by routerViewModel.state.collectAsState()
 
-    // Simple internal navigation state for Resident flow
+    // Simple internal navigation state
     var currentDest by remember { mutableStateOf(RouterDest.DASHBOARD) }
 
     if (routerState.isLoading) {
@@ -55,16 +58,23 @@ fun MainRouter(
         LoginScreen(
             onLoginSuccess = { role ->
                 authViewModel.onLocalLoginSuccess(role)
+                currentDest = RouterDest.DASHBOARD // Reset nav on login
             }
         )
     } else {
         // Role Dispatcher (Authenticated and Configured)
         when (authState.userRole) {
             UserRole.SYNDIC, UserRole.ADJOINT -> {
-                CockpitScreen()
+                if (currentDest == RouterDest.FINANCE) {
+                    BackHandler { currentDest = RouterDest.DASHBOARD }
+                    FinanceScreen()
+                } else {
+                    CockpitScreen(onFinanceClick = { currentDest = RouterDest.FINANCE })
+                }
             }
             UserRole.RESIDENT -> {
                 if (currentDest == RouterDest.CHANGE_PIN) {
+                    BackHandler { currentDest = RouterDest.DASHBOARD }
                     ChangePinScreen(onBack = { currentDest = RouterDest.DASHBOARD })
                 } else {
                     ResidentHomeScreen(onChangePinClick = { currentDest = RouterDest.CHANGE_PIN })

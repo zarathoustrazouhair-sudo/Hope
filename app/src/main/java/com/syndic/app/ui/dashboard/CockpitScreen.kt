@@ -35,6 +35,7 @@ import com.syndic.app.ui.theme.Slate
 
 @Composable
 fun CockpitScreen(
+    onFinanceClick: () -> Unit = {},
     dashboardViewModel: DashboardViewModel = hiltViewModel(),
     matrixViewModel: MatrixViewModel = hiltViewModel(),
     incidentViewModel: IncidentViewModel = hiltViewModel()
@@ -68,7 +69,7 @@ fun CockpitScreen(
                     value = "${dashboardState.globalBalance} DH",
                     borderColor = Gold,
                     modifier = Modifier.weight(1f),
-                    onClick = {}
+                    onClick = onFinanceClick
                 )
 
                 val runway = dashboardState.runwayMonths
@@ -85,7 +86,7 @@ fun CockpitScreen(
                     borderColor = CyanNeon,
                     icon = runwayEmoji,
                     modifier = Modifier.weight(1f),
-                    onClick = { /* Navigate to Finance */ }
+                    onClick = onFinanceClick
                 )
             }
 

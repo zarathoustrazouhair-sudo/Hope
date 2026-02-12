@@ -11,13 +11,13 @@ import java.util.Date
 
 @Dao
 interface TransactionDao {
-    @Query("SELECT * FROM transactions")
+    @Query("SELECT * FROM transactions ORDER BY date DESC")
     fun getAllTransactions(): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM transactions")
     fun getAllTransactionsSync(): List<TransactionEntity> // For suspend functions
 
-    @Query("SELECT * FROM transactions WHERE userId = :userId")
+    @Query("SELECT * FROM transactions WHERE userId = :userId ORDER BY date DESC")
     fun getUserTransactions(userId: String): Flow<List<TransactionEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

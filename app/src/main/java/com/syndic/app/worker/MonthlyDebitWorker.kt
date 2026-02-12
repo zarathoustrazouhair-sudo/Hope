@@ -32,7 +32,7 @@ class MonthlyDebitWorker @AssistedInject constructor(
             val monthName = localDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
             val year = localDate.year
             val label = "Cotisation $monthName $year"
-            val amount = -250.0 // Negative amount for debit
+            val amount = 250.0 // Positive magnitude, Repo handles sign inversion
 
             // Fetch all users (residents) from local DB
             val users = userDao.getAllUsersSync()

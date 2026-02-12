@@ -8,6 +8,10 @@ enum class TransactionType {
     COTISATION, PAIEMENT, DEPENSE
 }
 
+enum class PaymentMethod {
+    CASH, CHEQUE, VIREMENT, CARTE, AUTRE
+}
+
 @Entity(tableName = "transactions")
 data class TransactionEntity(
     @PrimaryKey
@@ -16,6 +20,13 @@ data class TransactionEntity(
     val amount: Double, // Room stores primitives, use Double for MVP simplicity (BigDecimal requires TypeConverter)
     val type: TransactionType,
     val label: String,
+
+    // New Fields for Phase 5 Finance Engine
+    val paymentMethod: PaymentMethod? = null, // Mandatory for PAIEMENT
+    val provider: String? = null, // Mandatory for DEPENSE
+    val category: String? = null, // Mandatory for DEPENSE (e.g. "Plomberie")
+    val receiptPath: String? = null, // Path to generated PDF file
+
     val date: Date,
     val createdAt: Date?
 )
