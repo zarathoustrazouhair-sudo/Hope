@@ -30,8 +30,12 @@ android {
         }
 
         // Add Supabase Secrets
-        buildConfigField("String", "SUPABASE_URL", "\"${localProperties["SUPABASE_URL"] ?: ""}\"")
-        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProperties["SUPABASE_ANON_KEY"] ?: ""}\"")
+        // Read from local.properties if available, otherwise fall back to environment variables (for CI/CD)
+        val supabaseUrl = localProperties["SUPABASE_URL"] as String? ?: System.getenv("SUPABASE_URL") ?: ""
+        val supabaseAnonKey = localProperties["SUPABASE_ANON_KEY"] as String? ?: System.getenv("SUPABASE_ANON_KEY") ?: ""
+
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
     }
 
     buildTypes {
