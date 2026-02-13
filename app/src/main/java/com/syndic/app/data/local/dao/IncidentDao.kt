@@ -25,6 +25,9 @@ interface IncidentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertIncident(incident: IncidentEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertIncidents(incidents: List<IncidentEntity>)
+
     @Update
     suspend fun updateIncident(incident: IncidentEntity)
 }
