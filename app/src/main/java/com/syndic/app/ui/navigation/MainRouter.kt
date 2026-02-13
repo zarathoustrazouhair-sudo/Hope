@@ -24,8 +24,10 @@ import com.syndic.app.ui.components.BottomNavBar
 import com.syndic.app.ui.dashboard.CockpitScreen
 import com.syndic.app.ui.finance.FinanceScreen
 import com.syndic.app.ui.login.LoginScreen
+import com.syndic.app.ui.provider.ProviderListScreen
 import com.syndic.app.ui.resident.ChangePinScreen
 import com.syndic.app.ui.resident.ResidentHomeScreen
+import com.syndic.app.ui.resident.ResidentListScreen
 import com.syndic.app.ui.setup.SetupScreen
 import com.syndic.app.ui.theme.Gold
 
@@ -110,17 +112,13 @@ fun MainRouter(
                     RouterDest.RESIDENTS -> {
                         BackHandler { currentDest = RouterDest.DASHBOARD }
                         Scaffold(bottomBar = { navBar("residents") }) { p ->
-                             Box(modifier = Modifier.padding(p).fillMaxSize(), contentAlignment = Alignment.Center) {
-                                 Text("Module Résidents (Bientôt)", color = Gold)
-                             }
+                             Box(modifier = Modifier.padding(p)) { ResidentListScreen() }
                         }
                     }
                     RouterDest.DOCS -> {
                         BackHandler { currentDest = RouterDest.DASHBOARD }
                         Scaffold(bottomBar = { navBar("docs") }) { p ->
-                             Box(modifier = Modifier.padding(p).fillMaxSize(), contentAlignment = Alignment.Center) {
-                                 Text("Documents & Prestataires (Bientôt)", color = Gold)
-                             }
+                             Box(modifier = Modifier.padding(p)) { ProviderListScreen() }
                         }
                     }
                     else -> {

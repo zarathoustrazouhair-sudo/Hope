@@ -19,7 +19,9 @@ data class MatrixState(
 )
 
 data class ResidentStatus(
+    val id: String,
     val apartment: String,
+    val name: String,
     val balance: Double,
     val statusColor: MatrixColor
 )
@@ -45,19 +47,24 @@ class MatrixViewModel @Inject constructor(
     private fun loadMatrix() {
         viewModelScope.launch {
             val allUsers = userRepository.getAllUsers()
-            // Filter only residents AP1-AP15 or similar pattern
-            val residents = allUsers.filter { it.apartmentNumber.startsWith("AP") }
-                .sortedBy {
-                    // Safely extract number part
-                    it.apartmentNumber.replace("AP", "").trim().toIntOrNull() ?: 999
-                }
-
             val config = configRepository.getConfig().firstOrNull()
-            val monthlyFee = config?.monthlyFee ?: 0.0
+            val monthlyFee = config?.monthlyFee ?: 200.0 // Default fallback
+
+            // Filter only residents AP1-AP15 or similar pattern
+            // Sort by Apartment Number
+            val residents = allUsers.filter { it.role.name == "RESIDENT" }
+                .sortedBy {
+                    it.apartmentNumber.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 999
+                }
 
             val statuses = residents.map { user ->
                 // Collect the first value of the Flow
-                val balance = transactionRepository.getUserBalance(user.id).firstOrNull() ?: 0.0
+                val userBalanceFlow = transactionRepository.getUserBalance(user.id)
+                val balance = try {
+                    userBalanceFlow.firstOrNull() ?: 0.0
+                } catch (e: Exception) {
+                    0.0
+                }
 
                 // Tricolor Logic:
                 // GOLD: Solde > 3 * Monthly Fee (3 months advance)
@@ -65,13 +72,15 @@ class MatrixViewModel @Inject constructor(
                 // RED: Solde < 0 (In Debt)
 
                 val color = when {
-                    balance > (3 * monthlyFee) && monthlyFee > 0 -> MatrixColor.GOLD
+                    balance > (monthlyFee * 3) && monthlyFee > 0 -> MatrixColor.GOLD
                     balance >= 0 -> MatrixColor.GREEN
                     else -> MatrixColor.RED
                 }
 
                 ResidentStatus(
+                    id = user.id,
                     apartment = user.apartmentNumber,
+                    name = "${user.firstName} ${user.lastName}",
                     balance = balance,
                     statusColor = color
                 )
