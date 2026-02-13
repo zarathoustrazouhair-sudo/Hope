@@ -40,6 +40,7 @@ fun CockpitScreen(
     onBlogClick: () -> Unit = {},
     onResidentsClick: () -> Unit = {},
     onDocsClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}, // New callback
     dashboardViewModel: DashboardViewModel = hiltViewModel(),
     matrixViewModel: MatrixViewModel = hiltViewModel()
 ) {
@@ -98,7 +99,8 @@ fun CockpitScreen(
                     borderColor = CyanNeon,
                     icon = runwayEmoji,
                     modifier = Modifier.weight(1f),
-                    onClick = onFinanceClick
+                    onClick = onFinanceClick,
+                    onSettingsClick = onSettingsClick // Pass callback here
                 )
             }
 

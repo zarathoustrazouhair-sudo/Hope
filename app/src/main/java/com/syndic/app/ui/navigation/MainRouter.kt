@@ -28,6 +28,7 @@ import com.syndic.app.ui.provider.ProviderListScreen
 import com.syndic.app.ui.resident.ChangePinScreen
 import com.syndic.app.ui.resident.ResidentHomeScreen
 import com.syndic.app.ui.resident.ResidentListScreen
+import com.syndic.app.ui.settings.SettingsScreen
 import com.syndic.app.ui.setup.SetupScreen
 import com.syndic.app.ui.theme.Gold
 
@@ -38,7 +39,8 @@ enum class RouterDest {
     INCIDENTS,
     BLOG,
     RESIDENTS,
-    DOCS
+    DOCS,
+    SETTINGS
 }
 
 @Composable
@@ -121,13 +123,20 @@ fun MainRouter(
                              Box(modifier = Modifier.padding(p)) { ProviderListScreen() }
                         }
                     }
+                    RouterDest.SETTINGS -> {
+                        BackHandler { currentDest = RouterDest.DASHBOARD }
+                        SettingsScreen(
+                            onBack = { currentDest = RouterDest.DASHBOARD }
+                        )
+                    }
                     else -> {
                         CockpitScreen(
                             onFinanceClick = { currentDest = RouterDest.FINANCE },
                             onIncidentsClick = { currentDest = RouterDest.INCIDENTS },
                             onBlogClick = { currentDest = RouterDest.BLOG },
                             onResidentsClick = { currentDest = RouterDest.RESIDENTS },
-                            onDocsClick = { currentDest = RouterDest.DOCS }
+                            onDocsClick = { currentDest = RouterDest.DOCS },
+                            onSettingsClick = { currentDest = RouterDest.SETTINGS }
                         )
                     }
                 }

@@ -18,27 +18,7 @@
 > Task :app:kspDebugKotlin
 
 > Task :app:compileDebugKotlin
-e: file:///app/app/src/main/java/com/syndic/app/ui/resident/ResidentListScreen.kt:127:22 Unresolved reference: border
-e: file:///app/app/src/main/java/com/syndic/app/ui/setup/SetupViewModel.kt:250:112 Null can not be a value of a non-null type String
-e: file:///app/app/src/main/java/com/syndic/app/ui/setup/SetupViewModel.kt:251:102 Null can not be a value of a non-null type String
-e: file:///app/app/src/main/java/com/syndic/app/ui/setup/SetupViewModel.kt:252:106 Null can not be a value of a non-null type String
-e: file:///app/app/src/main/java/com/syndic/app/ui/setup/SetupViewModel.kt:253:106 Null can not be a value of a non-null type String
-e: file:///app/app/src/main/java/com/syndic/app/ui/setup/SetupViewModel.kt:254:103 Null can not be a value of a non-null type String
+w: file:///app/app/src/main/java/com/syndic/app/ui/resident/ResidentListScreen.kt:161:49 'Send: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Send
 
-> Task :app:compileDebugKotlin FAILED
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:compileDebugKotlin'.
-> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
-   > Compilation error. See log for more details
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-
-BUILD FAILED in 36s
+BUILD SUCCESSFUL in 32s
 17 actionable tasks: 3 executed, 14 up-to-date

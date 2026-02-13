@@ -60,10 +60,15 @@ class CommunityRepositoryImpl @Inject constructor(
         return try {
             val postId = UUID.randomUUID().toString()
             val now = Date()
+
+            // Auto-Signature Logic
+            val signature = "\n\nPublié par SYNDIC" // Simplified for now, ideally fetch role/name
+            val contentWithSignature = if (content.contains("Publié par")) content else content + signature
+
             val post = BlogPostEntity(
                 id = postId,
                 title = title,
-                content = content,
+                content = contentWithSignature,
                 authorId = authorId,
                 date = now,
                 category = category

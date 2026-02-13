@@ -84,7 +84,12 @@ fun ResidentListScreen(
                     ResidentCard(
                         resident = resident,
                         onWhatsAppClick = {
-                            val message = "Bonjour ${resident.name}, votre solde actuel est de ${resident.balance} DH. Merci de régulariser."
+                            val message = when {
+                                resident.balance < 0 -> "Bonjour ${resident.name}, sauf erreur de notre part, vous avez un solde débiteur de ${kotlin.math.abs(resident.balance)} DH. Merci de régulariser."
+                                resident.balance > 0 -> "Bonjour ${resident.name}, vous avez une avance de ${resident.balance} DH. Merci pour votre confiance !"
+                                else -> "Bonjour ${resident.name}, vous êtes à jour dans vos cotisations. Merci."
+                            }
+
                             val intent = Intent(Intent.ACTION_VIEW).apply {
                                 data = Uri.parse("https://wa.me/?text=${Uri.encode(message)}")
                             }
