@@ -3,7 +3,9 @@ package com.syndic.app.ui.navigation
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -18,19 +20,23 @@ import com.syndic.app.data.local.entity.UserRole
 import com.syndic.app.ui.auth.AuthViewModel
 import com.syndic.app.ui.community.blog.BlogScreen
 import com.syndic.app.ui.community.incident.IncidentsScreen
+import com.syndic.app.ui.components.BottomNavBar
 import com.syndic.app.ui.dashboard.CockpitScreen
 import com.syndic.app.ui.finance.FinanceScreen
 import com.syndic.app.ui.login.LoginScreen
 import com.syndic.app.ui.resident.ChangePinScreen
 import com.syndic.app.ui.resident.ResidentHomeScreen
 import com.syndic.app.ui.setup.SetupScreen
+import com.syndic.app.ui.theme.Gold
 
 enum class RouterDest {
     DASHBOARD,
     CHANGE_PIN,
     FINANCE,
     INCIDENTS,
-    BLOG
+    BLOG,
+    RESIDENTS,
+    DOCS
 }
 
 @Composable
@@ -69,24 +75,61 @@ fun MainRouter(
         // Role Dispatcher (Authenticated and Configured)
         when (authState.userRole) {
             UserRole.SYNDIC, UserRole.ADJOINT -> {
+
+                // Helper for Navigation Bar consistency
+                val navBar = @Composable { route: String ->
+                    BottomNavBar(
+                        currentRoute = route,
+                        onHomeClick = { currentDest = RouterDest.DASHBOARD },
+                        onResidentsClick = { currentDest = RouterDest.RESIDENTS },
+                        onFinanceClick = { currentDest = RouterDest.FINANCE },
+                        onDocsClick = { currentDest = RouterDest.DOCS },
+                        onBlogClick = { currentDest = RouterDest.BLOG }
+                    )
+                }
+
                 when (currentDest) {
                     RouterDest.FINANCE -> {
                         BackHandler { currentDest = RouterDest.DASHBOARD }
-                        FinanceScreen()
+                        Scaffold(bottomBar = { navBar("finance") }) { p ->
+                            Box(modifier = Modifier.padding(p)) { FinanceScreen() }
+                        }
                     }
                     RouterDest.INCIDENTS -> {
                         BackHandler { currentDest = RouterDest.DASHBOARD }
-                        IncidentsScreen()
+                        Scaffold(bottomBar = { navBar("cockpit") }) { p ->
+                             Box(modifier = Modifier.padding(p)) { IncidentsScreen() }
+                        }
                     }
                     RouterDest.BLOG -> {
                         BackHandler { currentDest = RouterDest.DASHBOARD }
-                        BlogScreen()
+                        Scaffold(bottomBar = { navBar("blog") }) { p ->
+                            Box(modifier = Modifier.padding(p)) { BlogScreen() }
+                        }
+                    }
+                    RouterDest.RESIDENTS -> {
+                        BackHandler { currentDest = RouterDest.DASHBOARD }
+                        Scaffold(bottomBar = { navBar("residents") }) { p ->
+                             Box(modifier = Modifier.padding(p).fillMaxSize(), contentAlignment = Alignment.Center) {
+                                 Text("Module Résidents (Bientôt)", color = Gold)
+                             }
+                        }
+                    }
+                    RouterDest.DOCS -> {
+                        BackHandler { currentDest = RouterDest.DASHBOARD }
+                        Scaffold(bottomBar = { navBar("docs") }) { p ->
+                             Box(modifier = Modifier.padding(p).fillMaxSize(), contentAlignment = Alignment.Center) {
+                                 Text("Documents & Prestataires (Bientôt)", color = Gold)
+                             }
+                        }
                     }
                     else -> {
                         CockpitScreen(
                             onFinanceClick = { currentDest = RouterDest.FINANCE },
                             onIncidentsClick = { currentDest = RouterDest.INCIDENTS },
-                            onBlogClick = { currentDest = RouterDest.BLOG }
+                            onBlogClick = { currentDest = RouterDest.BLOG },
+                            onResidentsClick = { currentDest = RouterDest.RESIDENTS },
+                            onDocsClick = { currentDest = RouterDest.DOCS }
                         )
                     }
                 }

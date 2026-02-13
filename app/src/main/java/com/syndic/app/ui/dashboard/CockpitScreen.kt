@@ -18,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.syndic.app.ui.components.BottomNavBar
@@ -37,6 +38,8 @@ fun CockpitScreen(
     onFinanceClick: () -> Unit = {},
     onIncidentsClick: () -> Unit = {},
     onBlogClick: () -> Unit = {},
+    onResidentsClick: () -> Unit = {},
+    onDocsClick: () -> Unit = {},
     dashboardViewModel: DashboardViewModel = hiltViewModel(),
     matrixViewModel: MatrixViewModel = hiltViewModel()
 ) {
@@ -44,7 +47,16 @@ fun CockpitScreen(
     val matrixState by matrixViewModel.state.collectAsState()
 
     Scaffold(
-        bottomBar = { BottomNavBar() },
+        bottomBar = {
+            BottomNavBar(
+                currentRoute = "cockpit",
+                onHomeClick = { /* Stay here */ },
+                onResidentsClick = onResidentsClick,
+                onFinanceClick = onFinanceClick,
+                onDocsClick = onDocsClick,
+                onBlogClick = onBlogClick
+            )
+        },
         containerColor = com.syndic.app.ui.theme.NightBlue
     ) { paddingValues ->
         Column(
@@ -100,22 +112,20 @@ fun CockpitScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Task Widget Integration (Phase 10)
-                // We reuse KpiCard slot or replace it.
-                // Let's replace "MAGAZINE" with "TÂCHES" if we want to follow Plan Step 3 strictly ("Implémenter le widget Tâches").
-                // But we also want Blog. Let's stack them or put Tasks below.
-                // Plan says "Implémenter le widget Tâches sur le Cockpit".
+                // We ensure title is visible (CyanNeon matches SURVIE style for info/action)
 
                 KpiCard(
-                    title = "MAGAZINE",
+                    title = "ACTUALITÉS", // Changed from MAGAZINE to ensure clarity
                     value = "BLOG",
-                    borderColor = Slate, // Neutral
+                    borderColor = CyanNeon, // Use CyanNeon so text is visible (Slate was invisible)
                     icon = "📰",
                     modifier = Modifier.weight(1f),
                     onClick = onBlogClick
                 )
 
                 val incidentCount = dashboardState.openIncidentsCount
-                val incidentBorderColor = if (incidentCount > 0) RoseNeon else Slate
+                // If 0, use LightGray so title is visible. If > 0, use RoseNeon (Red)
+                val incidentBorderColor = if (incidentCount > 0) RoseNeon else Color.LightGray
 
                 KpiCard(
                     title = "INCIDENTS",
