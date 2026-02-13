@@ -3,7 +3,7 @@ name: Build Android App
 on:
   push:
     branches:
-      - main
+      - '**' # Trigger on all branches to allow testing feature branches
   pull_request:
     branches:
       - main
