@@ -20,7 +20,13 @@ import com.syndic.app.ui.theme.TextPrimary
 
 @Composable
 fun BottomNavBar(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentRoute: String = "cockpit",
+    onHomeClick: () -> Unit = {},
+    onResidentsClick: () -> Unit = {},
+    onFinanceClick: () -> Unit = {},
+    onDocsClick: () -> Unit = {},
+    onBlogClick: () -> Unit = {}
 ) {
     NavigationBar(
         modifier = modifier,
@@ -28,8 +34,8 @@ fun BottomNavBar(
         contentColor = Gold
     ) {
         NavigationBarItem(
-            selected = true,
-            onClick = { /* Navigate */ },
+            selected = currentRoute == "cockpit",
+            onClick = onHomeClick,
             icon = { Icon(Icons.Default.Home, contentDescription = "Cockpit") },
             label = { Text("Cockpit") },
             colors = NavigationBarItemDefaults.colors(
@@ -41,8 +47,8 @@ fun BottomNavBar(
             )
         )
         NavigationBarItem(
-            selected = false,
-            onClick = { /* Navigate */ },
+            selected = currentRoute == "residents",
+            onClick = onResidentsClick,
             icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Residents") },
             label = { Text("Residents") },
             colors = NavigationBarItemDefaults.colors(
@@ -54,8 +60,8 @@ fun BottomNavBar(
             )
         )
         NavigationBarItem(
-            selected = false,
-            onClick = { /* Navigate */ },
+            selected = currentRoute == "finance",
+            onClick = onFinanceClick,
             icon = { Icon(Icons.Default.List, contentDescription = "Finance") },
             label = { Text("Finance") },
             colors = NavigationBarItemDefaults.colors(
@@ -67,8 +73,8 @@ fun BottomNavBar(
             )
         )
         NavigationBarItem(
-            selected = false,
-            onClick = { /* Navigate */ },
+            selected = currentRoute == "docs",
+            onClick = onDocsClick,
             icon = { Icon(Icons.Default.Build, contentDescription = "Docs") },
             label = { Text("Docs") },
             colors = NavigationBarItemDefaults.colors(
@@ -80,8 +86,8 @@ fun BottomNavBar(
             )
         )
         NavigationBarItem(
-            selected = false,
-            onClick = { /* Navigate */ },
+            selected = currentRoute == "blog",
+            onClick = onBlogClick,
             icon = { Icon(Icons.Default.DateRange, contentDescription = "Blog") },
             label = { Text("Blog") },
             colors = NavigationBarItemDefaults.colors(

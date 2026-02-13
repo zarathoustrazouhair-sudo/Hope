@@ -1,0 +1,28 @@
+> Task :app:clean
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig
+> Task :app:generateDebugResValues
+> Task :app:mapDebugSourceSetPaths
+> Task :app:checkDebugAarMetadata
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+> Task :app:kspDebugKotlin
+
+> Task :app:compileDebugKotlin
+w: file:///app/app/src/main/java/com/syndic/app/ui/cockpit/tasks/TaskWidget.kt:88:25 'Divider(Modifier = ..., Dp = ..., Color = ...): Unit' is deprecated. Renamed to HorizontalDivider
+w: file:///app/app/src/main/java/com/syndic/app/ui/community/incident/IncidentsScreen.kt:215:5 Parameter 'incident' is never used
+w: file:///app/app/src/main/java/com/syndic/app/ui/components/BottomNavBar.kt:65:41 'List: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.List
+w: file:///app/app/src/main/java/com/syndic/app/ui/resident/detail/ResidentDetailScreen.kt:52:89 'ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack
+
+BUILD SUCCESSFUL in 32s
+18 actionable tasks: 18 executed
