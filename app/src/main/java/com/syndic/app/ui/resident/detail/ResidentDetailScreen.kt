@@ -2,6 +2,7 @@ package com.syndic.app.ui.resident.detail
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
@@ -18,7 +19,7 @@ import com.syndic.app.ui.theme.NightBlue
 @Composable
 fun ResidentDetailScreen(
     apartment: String,
-    onBack: () -> Unit,
+    onBack: () -> Unit, // Parameter unused warning, suppressing via logic or usage
     viewModel: ResidentDetailViewModel = hiltViewModel()
 ) {
     LaunchedEffect(apartment) { viewModel.loadResident(apartment) }
@@ -45,6 +46,15 @@ fun ResidentDetailScreen(
             TopAppBar(
                 title = { Text(apartment, color = CockpitGold, fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = NightBlue),
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = {
                         if (state.isEditing) {
