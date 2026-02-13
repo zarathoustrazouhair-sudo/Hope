@@ -1,6 +1,7 @@
 package com.syndic.app.data.repository
 
 import com.syndic.app.data.local.dao.TransactionDao
+import com.syndic.app.data.local.entity.PaymentMethod
 import com.syndic.app.data.local.entity.TransactionEntity
 import com.syndic.app.data.local.entity.TransactionType
 import com.syndic.app.domain.repository.ConfigRepository
@@ -44,6 +45,10 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getAllTransactions(): Flow<List<TransactionEntity>> {
+        return transactionDao.getAllTransactions()
+    }
+
     override suspend fun getRunway(): Double {
         val allTx = transactionDao.getAllTransactionsSync()
         val currentBalance = allTx.sumOf {
@@ -58,8 +63,11 @@ class TransactionRepositoryImpl @Inject constructor(
         val monthlyBurn = if (config != null) {
             config.conciergeSalary +
             config.cleaningCost +
-            config.maintenanceCost +
-            config.otherFixedCosts
+            config.electricityCost +
+            config.waterCost +
+            config.elevatorCost +
+            config.insuranceCost +
+            config.diversCost
         } else {
             0.0
         }
@@ -84,8 +92,12 @@ class TransactionRepositoryImpl @Inject constructor(
         userId: String?,
         amount: Double,
         type: TransactionType,
-        label: String
-    ): Result<Unit> {
+        label: String,
+        paymentMethod: PaymentMethod?,
+        provider: String?,
+        category: String?,
+        receiptPath: String?
+    ): Result<TransactionEntity> {
         return try {
             val tx = TransactionEntity(
                 id = UUID.randomUUID().toString(),
@@ -93,11 +105,15 @@ class TransactionRepositoryImpl @Inject constructor(
                 amount = amount,
                 type = type,
                 label = label,
+                paymentMethod = paymentMethod,
+                provider = provider,
+                category = category,
+                receiptPath = receiptPath,
                 date = Date(),
                 createdAt = Date()
             )
             transactionDao.insertTransaction(tx)
-            Result.success(Unit)
+            Result.success(tx)
         } catch (e: Exception) {
             Result.failure(e)
         }

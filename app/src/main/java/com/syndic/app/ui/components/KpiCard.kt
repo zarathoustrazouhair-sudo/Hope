@@ -1,6 +1,7 @@
 package com.syndic.app.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,10 +29,12 @@ fun KpiCard(
     title: String,
     value: String,
     borderColor: Color,
-    modifier: Modifier = Modifier
+    icon: String? = null,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Slate),
         border = BorderStroke(1.dp, borderColor),
@@ -46,15 +50,24 @@ fun KpiCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = borderColor, // Title takes border color (Gold/Cyan)
-                fontWeight = FontWeight.Bold
+                color = borderColor,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineMedium, // Monospace/Bold logic in Theme
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (icon != null) {
+                    Text(text = icon, fontSize = 24.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+            }
         }
     }
 }

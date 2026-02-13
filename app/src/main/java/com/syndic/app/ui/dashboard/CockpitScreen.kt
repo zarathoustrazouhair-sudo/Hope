@@ -26,7 +26,6 @@ import com.syndic.app.ui.components.CockpitHeader
 import com.syndic.app.ui.components.KpiCard
 import com.syndic.app.ui.components.RecoveryGauge
 import com.syndic.app.ui.components.ResidentMatrixGrid
-import com.syndic.app.ui.incident.IncidentViewModel
 import com.syndic.app.ui.matrix.MatrixViewModel
 import com.syndic.app.ui.theme.CyanNeon
 import com.syndic.app.ui.theme.Gold
@@ -35,13 +34,14 @@ import com.syndic.app.ui.theme.Slate
 
 @Composable
 fun CockpitScreen(
+    onFinanceClick: () -> Unit = {},
+    onIncidentsClick: () -> Unit = {},
+    onBlogClick: () -> Unit = {},
     dashboardViewModel: DashboardViewModel = hiltViewModel(),
-    matrixViewModel: MatrixViewModel = hiltViewModel(),
-    incidentViewModel: IncidentViewModel = hiltViewModel()
+    matrixViewModel: MatrixViewModel = hiltViewModel()
 ) {
     val dashboardState by dashboardViewModel.uiState.collectAsState()
     val matrixState by matrixViewModel.state.collectAsState()
-    val incidentState by incidentViewModel.uiState.collectAsState()
 
     Scaffold(
         bottomBar = { BottomNavBar() },
@@ -67,13 +67,26 @@ fun CockpitScreen(
                     title = "SOLDE GLOBAL",
                     value = "${dashboardState.globalBalance} DH",
                     borderColor = Gold,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = onFinanceClick
                 )
+
+                val runway = dashboardState.runwayMonths
+                val runwayEmoji = when {
+                    runway > 6 -> "🤩" // > 6 months
+                    runway > 3 -> "🙂" // > 3 months
+                    runway > 1 -> "😐" // > 1 month
+                    runway >= 0 -> "😨" // < 1 month (but positive)
+                    else -> "💀"       // Negative (Debt)
+                }
+
                 KpiCard(
                     title = "SURVIE",
-                    value = String.format("%.1f MOIS", dashboardState.runwayMonths),
+                    value = String.format("%.1f MOIS", runway),
                     borderColor = CyanNeon,
-                    modifier = Modifier.weight(1f)
+                    icon = runwayEmoji,
+                    modifier = Modifier.weight(1f),
+                    onClick = onFinanceClick
                 )
             }
 
@@ -86,23 +99,37 @@ fun CockpitScreen(
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Task Widget Integration (Phase 10)
+                // We reuse KpiCard slot or replace it.
+                // Let's replace "MAGAZINE" with "TÂCHES" if we want to follow Plan Step 3 strictly ("Implémenter le widget Tâches").
+                // But we also want Blog. Let's stack them or put Tasks below.
+                // Plan says "Implémenter le widget Tâches sur le Cockpit".
+
                 KpiCard(
-                    title = "TÂCHES",
-                    value = "0", // Placeholder
+                    title = "MAGAZINE",
+                    value = "BLOG",
                     borderColor = Slate, // Neutral
-                    modifier = Modifier.weight(1f)
+                    icon = "📰",
+                    modifier = Modifier.weight(1f),
+                    onClick = onBlogClick
                 )
 
-                val incidentCount = incidentState.incidents.size
+                val incidentCount = dashboardState.openIncidentsCount
                 val incidentBorderColor = if (incidentCount > 0) RoseNeon else Slate
 
                 KpiCard(
                     title = "INCIDENTS",
                     value = "$incidentCount",
                     borderColor = incidentBorderColor,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = onIncidentsClick
                 )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Tasks Widget (Phase 10)
+            com.syndic.app.ui.cockpit.tasks.TaskWidget()
 
             Spacer(modifier = Modifier.height(24.dp))
 

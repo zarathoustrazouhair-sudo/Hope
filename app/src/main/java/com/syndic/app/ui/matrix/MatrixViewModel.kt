@@ -65,7 +65,7 @@ class MatrixViewModel @Inject constructor(
                 // RED: Solde < 0 (In Debt)
 
                 val color = when {
-                    balance >= (3 * monthlyFee) && monthlyFee > 0 -> MatrixColor.GOLD
+                    balance > (3 * monthlyFee) && monthlyFee > 0 -> MatrixColor.GOLD
                     balance >= 0 -> MatrixColor.GREEN
                     else -> MatrixColor.RED
                 }

@@ -2,6 +2,7 @@ package com.syndic.app.ui.resident
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.syndic.app.domain.repository.CommunityRepository
 import com.syndic.app.domain.repository.TransactionRepository
 import com.syndic.app.domain.repository.UserRepository
 import com.syndic.app.util.SecurityUtils
@@ -18,13 +19,15 @@ data class ResidentHomeState(
     val balance: Double = 0.0,
     val runwayMonths: Double = 0.0,
     val isDefaultPin: Boolean = false,
+    val latestBlogTitle: String? = null,
     val isLoading: Boolean = true
 )
 
 @HiltViewModel
 class ResidentHomeViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val communityRepository: CommunityRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ResidentHomeState())
@@ -47,11 +50,14 @@ class ResidentHomeViewModel @Inject constructor(
                 val defaultPinHash = SecurityUtils.hashPin("0000")
                 val isDefault = currentUser.pinHash == defaultPinHash
 
+                val latestPost = communityRepository.getLatestPost()
+
                 _state.value = ResidentHomeState(
                     apartment = currentUser.apartmentNumber,
                     balance = balance,
                     runwayMonths = runway,
                     isDefaultPin = isDefault,
+                    latestBlogTitle = latestPost?.title,
                     isLoading = false
                 )
             } else {

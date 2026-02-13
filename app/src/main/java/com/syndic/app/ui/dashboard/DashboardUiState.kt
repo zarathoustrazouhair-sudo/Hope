@@ -5,5 +5,6 @@ data class DashboardUiState(
     val globalBalance: Double = 0.0,
     val runwayMonths: Double = 0.0,
     val recoveryRate: Double = 0.0,
+    val openIncidentsCount: Int = 0,
     val error: String? = null
 )

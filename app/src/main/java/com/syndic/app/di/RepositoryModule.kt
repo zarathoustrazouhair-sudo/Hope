@@ -1,11 +1,17 @@
 package com.syndic.app.di
 
+import com.syndic.app.data.repository.CommunityRepositoryImpl
 import com.syndic.app.data.repository.ConfigRepositoryImpl
 import com.syndic.app.data.repository.IncidentRepositoryImpl
+import com.syndic.app.data.repository.ProviderRepositoryImpl
+import com.syndic.app.data.repository.TaskRepositoryImpl
 import com.syndic.app.data.repository.TransactionRepositoryImpl
 import com.syndic.app.data.repository.UserRepositoryImpl
+import com.syndic.app.domain.repository.CommunityRepository
 import com.syndic.app.domain.repository.ConfigRepository
 import com.syndic.app.domain.repository.IncidentRepository
+import com.syndic.app.domain.repository.ProviderRepository
+import com.syndic.app.domain.repository.TaskRepository
 import com.syndic.app.domain.repository.TransactionRepository
 import com.syndic.app.domain.repository.UserRepository
 import dagger.Binds
@@ -41,4 +47,22 @@ abstract class RepositoryModule {
     abstract fun bindConfigRepository(
         configRepositoryImpl: ConfigRepositoryImpl
     ): ConfigRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCommunityRepository(
+        communityRepositoryImpl: CommunityRepositoryImpl
+    ): CommunityRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTaskRepository(
+        taskRepositoryImpl: TaskRepositoryImpl
+    ): TaskRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindProviderRepository(
+        providerRepositoryImpl: ProviderRepositoryImpl
+    ): ProviderRepository
 }

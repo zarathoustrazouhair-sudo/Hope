@@ -10,6 +10,12 @@ val CyanNeon = Color(0xFF22D3EE)
 val RoseNeon = Color(0xFFFB7185)
 val TextPrimary = Color(0xFFF8FAFC)
 
+// Aliases for semantic usage
+val CockpitGold = Gold
+val CockpitGreen = CyanNeon
+val CockpitRed = RoseNeon
+val CockpitCyan = CyanNeon // Alias required for SettingsScreen
+
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)

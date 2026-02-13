@@ -3,6 +3,7 @@ package com.syndic.app.data.local.converter
 import androidx.room.TypeConverter
 import com.syndic.app.data.local.entity.IncidentPriority
 import com.syndic.app.data.local.entity.IncidentStatus
+import com.syndic.app.data.local.entity.PaymentMethod
 import com.syndic.app.data.local.entity.TransactionType
 import com.syndic.app.data.local.entity.UserRole
 import java.util.Date
@@ -57,5 +58,15 @@ class RoomTypeConverters {
     @TypeConverter
     fun transactionTypeToString(type: TransactionType?): String? {
         return type?.name
+    }
+
+    @TypeConverter
+    fun fromPaymentMethod(value: String?): PaymentMethod? {
+        return value?.let { enumValueOf<PaymentMethod>(it) }
+    }
+
+    @TypeConverter
+    fun paymentMethodToString(method: PaymentMethod?): String? {
+        return method?.name
     }
 }

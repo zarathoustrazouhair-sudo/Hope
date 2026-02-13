@@ -3,8 +3,11 @@ package com.syndic.app.di
 import android.content.Context
 import androidx.room.Room
 import com.syndic.app.data.local.AppDatabase
+import com.syndic.app.data.local.dao.BlogDao
 import com.syndic.app.data.local.dao.IncidentDao
+import com.syndic.app.data.local.dao.ProviderDao
 import com.syndic.app.data.local.dao.ResidenceConfigDao
+import com.syndic.app.data.local.dao.TaskDao
 import com.syndic.app.data.local.dao.TransactionDao
 import com.syndic.app.data.local.dao.UserDao
 import dagger.Module
@@ -40,4 +43,13 @@ object DatabaseModule {
 
     @Provides
     fun provideTransactionDao(database: AppDatabase): TransactionDao = database.transactionDao()
+
+    @Provides
+    fun provideBlogDao(database: AppDatabase): BlogDao = database.blogDao()
+
+    @Provides
+    fun provideTaskDao(database: AppDatabase): TaskDao = database.taskDao()
+
+    @Provides
+    fun provideProviderDao(database: AppDatabase): ProviderDao = database.providerDao()
 }
