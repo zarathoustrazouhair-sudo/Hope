@@ -99,6 +99,12 @@ fun CockpitScreen(
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Task Widget Integration (Phase 10)
+                // We reuse KpiCard slot or replace it.
+                // Let's replace "MAGAZINE" with "TÂCHES" if we want to follow Plan Step 3 strictly ("Implémenter le widget Tâches").
+                // But we also want Blog. Let's stack them or put Tasks below.
+                // Plan says "Implémenter le widget Tâches sur le Cockpit".
+
                 KpiCard(
                     title = "MAGAZINE",
                     value = "BLOG",
@@ -119,6 +125,11 @@ fun CockpitScreen(
                     onClick = onIncidentsClick
                 )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Tasks Widget (Phase 10)
+            com.syndic.app.ui.cockpit.tasks.TaskWidget()
 
             Spacer(modifier = Modifier.height(24.dp))
 

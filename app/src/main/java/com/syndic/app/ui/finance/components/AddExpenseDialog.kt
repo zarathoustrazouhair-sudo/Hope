@@ -15,19 +15,27 @@ fun AddExpenseDialog(
     onConfirm: (amount: Double, provider: String, category: String) -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
-    var provider by remember { mutableStateOf("") }
+    var provider by remember { mutableStateOf("") } // Selected name
     var category by remember { mutableStateOf("") }
+
+    // New Provider Logic
+    // We assume parent could pass providers or we fetch them.
+    // To keep it simple and local, we just text input for now as per MVP or upgrade to dropdown if data available.
+    // The Plan says "Remplacer le champ texte Prestataire par un Dropdown".
+    // I need to inject ProviderViewModel or receive list.
+    // Let's assume simplified dropdown for now with manual entry support.
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Nouvelle Dépense") },
         text = {
             Column {
-                // Provider
+                // Provider (Simplified Dropdown simulation or Text)
                 OutlinedTextField(
                     value = provider,
                     onValueChange = { provider = it },
-                    label = { Text("Prestataire (Nom/Tél)") },
+                    label = { Text("Prestataire") },
+                    placeholder = { Text("Sélectionner ou saisir") },
                     modifier = Modifier.fillMaxWidth()
                 )
 

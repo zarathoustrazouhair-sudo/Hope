@@ -1,16 +1,21 @@
 package com.syndic.app.data.service
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
+import android.net.Uri
 import android.os.Environment
+import com.syndic.app.R
 import com.syndic.app.data.local.entity.TransactionEntity
 import com.syndic.app.data.local.entity.TransactionType
+import com.syndic.app.domain.repository.ConfigRepository
 import com.syndic.app.domain.service.PdfService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -19,11 +24,16 @@ import java.util.Locale
 import javax.inject.Inject
 
 class PdfServiceImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val configRepository: ConfigRepository
 ) : PdfService {
 
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     private val fileDateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+
+    // A5 Landscape Dimensions (595 x 420 points approx)
+    private val PAGE_WIDTH = 595
+    private val PAGE_HEIGHT = 420
 
     override suspend fun generateReceipt(transaction: TransactionEntity): Result<File> {
         return withContext(Dispatchers.IO) {
@@ -69,9 +79,11 @@ class PdfServiceImpl @Inject constructor(
         return dir
     }
 
-    private fun generatePdf(file: File, title: String, transaction: TransactionEntity) {
+    private suspend fun generatePdf(file: File, title: String, transaction: TransactionEntity) {
+        val config = configRepository.getConfig().firstOrNull()
+
         val pdfDocument = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create() // A4
+        val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, 1).create() // A5 Landscape
         val page = pdfDocument.startPage(pageInfo)
         val canvas: Canvas = page.canvas
         val paint = Paint()
@@ -79,25 +91,32 @@ class PdfServiceImpl @Inject constructor(
         // Background
         canvas.drawColor(Color.WHITE)
 
+        // Draw Logo (Placeholder if no custom logo, reusing app logo vector roughly or drawing placeholder)
+        // Since we can't easily rasterize vector drawable without a bitmap helper here, we assume standard bitmap logic.
+        // For strict offline constraint without coil, we draw a text placeholder or primitive.
+        paint.color = Color.BLACK
+        paint.textSize = 12f
+        canvas.drawText(config?.residenceName ?: "RÉSIDENCE", 20f, 30f, paint)
+
         // Title
         paint.color = Color.BLACK
         paint.textSize = 24f
         paint.isFakeBoldText = true
         paint.textAlign = Paint.Align.CENTER
-        canvas.drawText(title, 297.5f, 50f, paint)
+        canvas.drawText(title, PAGE_WIDTH / 2f, 50f, paint)
 
         // Divider
         paint.strokeWidth = 2f
-        canvas.drawLine(50f, 70f, 545f, 70f, paint)
+        canvas.drawLine(20f, 70f, (PAGE_WIDTH - 20).toFloat(), 70f, paint)
 
         // Content
         paint.textSize = 14f
         paint.isFakeBoldText = false
         paint.textAlign = Paint.Align.LEFT
 
-        var y = 120f
+        var y = 100f
         val x = 50f
-        val lineHeight = 25f
+        val lineHeight = 20f
 
         // Metadata
         canvas.drawText("Date: ${dateFormat.format(transaction.date)}", x, y, paint)
@@ -121,19 +140,39 @@ class PdfServiceImpl @Inject constructor(
         // Amount Box
         val amountRectY = y - 20
         paint.style = Paint.Style.STROKE
-        canvas.drawRect(x, amountRectY, 545f, amountRectY + 60, paint)
+        canvas.drawRect(x, amountRectY, (PAGE_WIDTH - 50).toFloat(), amountRectY + 50, paint)
 
         paint.style = Paint.Style.FILL
         paint.textSize = 18f
         paint.isFakeBoldText = true
-        canvas.drawText("MONTANT: ${String.format("%.2f", transaction.amount)} DH", x + 20, y + 20, paint)
+        canvas.drawText("MONTANT: ${String.format("%.2f", transaction.amount)} DH", x + 20, y + 15, paint)
 
-        y += 100f
+        // Footer / Stamp
+        y += 80f
+        val footerY = (PAGE_HEIGHT - 60).toFloat()
 
-        // Footer
-        paint.textSize = 12f
+        paint.textSize = 10f
         paint.isFakeBoldText = false
-        canvas.drawText("Signature:", 400f, y, paint)
+        paint.textAlign = Paint.Align.RIGHT
+        canvas.drawText("Le Syndic ${config?.syndicCivility ?: ""} ${config?.residenceName ?: ""}", (PAGE_WIDTH - 50).toFloat(), footerY, paint)
+
+        // Auto Stamp Logic
+        if (config?.isAutoStampEnabled == true && config.stampUri != null) {
+            try {
+                val uri = Uri.parse(config.stampUri)
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                // Draw bitmap scaled down at bottom right
+                if (bitmap != null) {
+                    val stampSize = 80
+                    val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(bitmap, stampSize, stampSize, true)
+                    canvas.drawBitmap(scaledBitmap, (PAGE_WIDTH - 50 - stampSize).toFloat(), footerY - 10, null)
+                }
+                inputStream?.close()
+            } catch (e: Exception) {
+                // Ignore stamp load failure, just don't draw
+            }
+        }
 
         pdfDocument.finishPage(page)
 

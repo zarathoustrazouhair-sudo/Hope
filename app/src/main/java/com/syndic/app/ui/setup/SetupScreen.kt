@@ -1,14 +1,11 @@
 package com.syndic.app.ui.setup
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,9 +16,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.syndic.app.ui.theme.SyndicAppTheme
 
-// Night Cockpit Colors (Hardcoded for this screen to ensure consistency)
+// Night Cockpit Colors
 private val CockpitBackground = Color(0xFF0F172A)
 private val CockpitGold = Color(0xFFFFD700)
 private val CockpitCyan = Color(0xFF00E5FF)
@@ -75,6 +71,7 @@ fun SetupScreen(
             // Content based on step
             when (state.currentStep) {
                 SetupStep.WELCOME -> WelcomeStep(state, viewModel)
+                SetupStep.SYNDIC_INFO -> SyndicInfoStep(state, viewModel)
                 SetupStep.MASTER_PIN -> MasterPinStep(state, viewModel)
                 SetupStep.FINANCIAL_CONFIG -> FinancialConfigStep(state, viewModel)
                 SetupStep.SECURITY_CHECK -> SecurityCheckStep(state, viewModel)
@@ -137,6 +134,95 @@ fun WelcomeStep(state: SetupState, viewModel: SetupViewModel) {
         modifier = Modifier.fillMaxWidth().height(50.dp)
     ) {
         Text("COMMENCER", color = CockpitBackground, fontWeight = FontWeight.Bold)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SyndicInfoStep(state: SetupState, viewModel: SetupViewModel) {
+    var expanded by remember { mutableStateOf(false) }
+    val civilities = listOf("Monsieur", "Madame", "Mademoiselle")
+
+    Text("Identité Syndic", color = Color.White, fontSize = 20.sp)
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Civility Dropdown
+    Box(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = state.syndicCivility,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Civilité") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.fillMaxWidth().clickable { expanded = true },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = CockpitCyan,
+                unfocusedBorderColor = Color.Gray,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
+            )
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            civilities.forEach { civility ->
+                DropdownMenuItem(
+                    text = { Text(civility) },
+                    onClick = {
+                        viewModel.onCivilityChange(civility)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    OutlinedTextField(
+        value = state.syndicEmail,
+        onValueChange = viewModel::onEmailChange,
+        label = { Text("Email (Google recommandé)") },
+        placeholder = { Text("exemple@gmail.com") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = CockpitCyan,
+            unfocusedBorderColor = Color.Gray,
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    OutlinedTextField(
+        value = state.syndicPhone,
+        onValueChange = viewModel::onPhoneChange,
+        label = { Text("Téléphone (+212)") },
+        prefix = { Text("+212 ", color = CockpitCyan) },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = CockpitCyan,
+            unfocusedBorderColor = Color.Gray,
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        TextButton(onClick = viewModel::onBackStep) { Text("RETOUR", color = Color.Gray) }
+        Button(
+            onClick = viewModel::onNextStep,
+            colors = ButtonDefaults.buttonColors(containerColor = CockpitCyan),
+            modifier = Modifier.height(50.dp)
+        ) {
+            Text("SUIVANT", color = CockpitBackground, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
@@ -323,6 +409,7 @@ fun SecurityCheckStep(state: SetupState, viewModel: SetupViewModel) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             DetailRow("Résidence", state.residenceName)
+            DetailRow("Syndic", "${state.syndicCivility} ${state.syndicPhone}")
             DetailRow("Cotisation", "${state.monthlyFee} DH")
             DetailRow("Total Charges", "${calculateTotalCosts(state)} DH")
             Spacer(modifier = Modifier.height(8.dp))

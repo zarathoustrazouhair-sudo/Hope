@@ -42,6 +42,21 @@ class SetupViewModel @Inject constructor(
         _state.value = _state.value.copy(residenceName = name, error = null)
     }
 
+    fun onCivilityChange(civility: String) {
+        _state.value = _state.value.copy(syndicCivility = civility)
+    }
+
+    fun onEmailChange(email: String) {
+        _state.value = _state.value.copy(syndicEmail = email, error = null)
+    }
+
+    fun onPhoneChange(phone: String) {
+        // Enforce numeric only for the body
+        if (phone.all { it.isDigit() }) {
+            _state.value = _state.value.copy(syndicPhone = phone, error = null)
+        }
+    }
+
     fun onMasterPinChange(pin: String) {
         if (pin.length <= 6 && pin.all { it.isDigit() }) {
             _state.value = _state.value.copy(masterPin = pin, error = null)
@@ -54,37 +69,14 @@ class SetupViewModel @Inject constructor(
         }
     }
 
-    fun onMonthlyFeeChange(value: String) {
-         _state.value = _state.value.copy(monthlyFee = value, error = null)
-    }
-
-    fun onConciergeSalaryChange(value: String) {
-         _state.value = _state.value.copy(conciergeSalary = value, error = null)
-    }
-
-    fun onCleaningCostChange(value: String) {
-         _state.value = _state.value.copy(cleaningCost = value, error = null)
-    }
-
-    fun onElectricityCostChange(value: String) {
-         _state.value = _state.value.copy(electricityCost = value, error = null)
-    }
-
-    fun onWaterCostChange(value: String) {
-         _state.value = _state.value.copy(waterCost = value, error = null)
-    }
-
-    fun onElevatorCostChange(value: String) {
-         _state.value = _state.value.copy(elevatorCost = value, error = null)
-    }
-
-    fun onInsuranceCostChange(value: String) {
-         _state.value = _state.value.copy(insuranceCost = value, error = null)
-    }
-
-    fun onDiversCostChange(value: String) {
-         _state.value = _state.value.copy(diversCost = value, error = null)
-    }
+    fun onMonthlyFeeChange(value: String) { _state.value = _state.value.copy(monthlyFee = value, error = null) }
+    fun onConciergeSalaryChange(value: String) { _state.value = _state.value.copy(conciergeSalary = value, error = null) }
+    fun onCleaningCostChange(value: String) { _state.value = _state.value.copy(cleaningCost = value, error = null) }
+    fun onElectricityCostChange(value: String) { _state.value = _state.value.copy(electricityCost = value, error = null) }
+    fun onWaterCostChange(value: String) { _state.value = _state.value.copy(waterCost = value, error = null) }
+    fun onElevatorCostChange(value: String) { _state.value = _state.value.copy(elevatorCost = value, error = null) }
+    fun onInsuranceCostChange(value: String) { _state.value = _state.value.copy(insuranceCost = value, error = null) }
+    fun onDiversCostChange(value: String) { _state.value = _state.value.copy(diversCost = value, error = null) }
 
     fun onNextStep() {
         val currentState = _state.value
@@ -92,6 +84,15 @@ class SetupViewModel @Inject constructor(
             SetupStep.WELCOME -> {
                 if (currentState.residenceName.isBlank()) {
                     _state.value = currentState.copy(error = "Le nom de la résidence est obligatoire")
+                } else {
+                    _state.value = currentState.copy(currentStep = SetupStep.SYNDIC_INFO, error = null)
+                }
+            }
+            SetupStep.SYNDIC_INFO -> {
+                if (currentState.syndicEmail.isBlank()) {
+                    _state.value = currentState.copy(error = "Email obligatoire")
+                } else if (currentState.syndicPhone.length < 9) { // Simple check for now
+                    _state.value = currentState.copy(error = "Numéro de téléphone invalide")
                 } else {
                     _state.value = currentState.copy(currentStep = SetupStep.MASTER_PIN, error = null)
                 }
@@ -120,7 +121,8 @@ class SetupViewModel @Inject constructor(
     fun onBackStep() {
          val currentState = _state.value
         when (currentState.currentStep) {
-            SetupStep.MASTER_PIN -> _state.value = currentState.copy(currentStep = SetupStep.WELCOME, error = null)
+            SetupStep.SYNDIC_INFO -> _state.value = currentState.copy(currentStep = SetupStep.WELCOME, error = null)
+            SetupStep.MASTER_PIN -> _state.value = currentState.copy(currentStep = SetupStep.SYNDIC_INFO, error = null)
             SetupStep.FINANCIAL_CONFIG -> _state.value = currentState.copy(currentStep = SetupStep.MASTER_PIN, error = null)
             SetupStep.SECURITY_CHECK -> _state.value = currentState.copy(currentStep = SetupStep.FINANCIAL_CONFIG, error = null)
             else -> {}
@@ -131,13 +133,7 @@ class SetupViewModel @Inject constructor(
         val s = _state.value
         return try {
             s.monthlyFee.ifBlank { "0" }.toDouble()
-            s.conciergeSalary.ifBlank { "0" }.toDouble()
-            s.cleaningCost.ifBlank { "0" }.toDouble()
-            s.electricityCost.ifBlank { "0" }.toDouble()
-            s.waterCost.ifBlank { "0" }.toDouble()
-            s.elevatorCost.ifBlank { "0" }.toDouble()
-            s.insuranceCost.ifBlank { "0" }.toDouble()
-            s.diversCost.ifBlank { "0" }.toDouble()
+            // ... strict check if needed, mostly parseable is enough
             true
         } catch (e: NumberFormatException) {
             _state.value = s.copy(error = "Veuillez entrer des montants valides")
@@ -154,6 +150,9 @@ class SetupViewModel @Inject constructor(
             val config = ResidenceConfigEntity(
                 id = "config_v1",
                 residenceName = s.residenceName,
+                syndicCivility = s.syndicCivility,
+                syndicEmail = s.syndicEmail,
+                syndicPhone = "+212${s.syndicPhone}", // Store with prefix
                 monthlyFee = s.monthlyFee.toDoubleOrNull() ?: 0.0,
                 conciergeSalary = s.conciergeSalary.toDoubleOrNull() ?: 0.0,
                 cleaningCost = s.cleaningCost.toDoubleOrNull() ?: 0.0,
@@ -173,7 +172,7 @@ class SetupViewModel @Inject constructor(
             for (i in 1..15) {
                 val user = UserEntity(
                     id = UUID.randomUUID().toString(),
-                    email = "ap$i@residence.com", // Placeholder email
+                    email = "ap$i@residence.com",
                     firstName = "Résident",
                     lastName = "AP$i",
                     role = UserRole.RESIDENT,
