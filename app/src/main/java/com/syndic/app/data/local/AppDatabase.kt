@@ -23,7 +23,7 @@ import com.syndic.app.data.local.entity.UserEntity
         TransactionEntity::class,
         BlogPostEntity::class
     ],
-    version = 6, // Bumped for Phase 8 Community Engine (BlogPostEntity)
+    version = 7, // Bumped for ResidenceConfigEntity changes (La Mondiale)
     exportSchema = false
 )
 @TypeConverters(RoomTypeConverters::class)

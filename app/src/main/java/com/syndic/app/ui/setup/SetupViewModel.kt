@@ -66,8 +66,24 @@ class SetupViewModel @Inject constructor(
          _state.value = _state.value.copy(cleaningCost = value, error = null)
     }
 
-    fun onMaintenanceCostChange(value: String) {
-         _state.value = _state.value.copy(maintenanceCost = value, error = null)
+    fun onElectricityCostChange(value: String) {
+         _state.value = _state.value.copy(electricityCost = value, error = null)
+    }
+
+    fun onWaterCostChange(value: String) {
+         _state.value = _state.value.copy(waterCost = value, error = null)
+    }
+
+    fun onElevatorCostChange(value: String) {
+         _state.value = _state.value.copy(elevatorCost = value, error = null)
+    }
+
+    fun onInsuranceCostChange(value: String) {
+         _state.value = _state.value.copy(insuranceCost = value, error = null)
+    }
+
+    fun onDiversCostChange(value: String) {
+         _state.value = _state.value.copy(diversCost = value, error = null)
     }
 
     fun onNextStep() {
@@ -114,10 +130,14 @@ class SetupViewModel @Inject constructor(
     private fun isValidFinancials(): Boolean {
         val s = _state.value
         return try {
-            s.monthlyFee.toDouble()
-            s.conciergeSalary.toDouble()
-            s.cleaningCost.toDouble()
-            s.maintenanceCost.toDouble()
+            s.monthlyFee.ifBlank { "0" }.toDouble()
+            s.conciergeSalary.ifBlank { "0" }.toDouble()
+            s.cleaningCost.ifBlank { "0" }.toDouble()
+            s.electricityCost.ifBlank { "0" }.toDouble()
+            s.waterCost.ifBlank { "0" }.toDouble()
+            s.elevatorCost.ifBlank { "0" }.toDouble()
+            s.insuranceCost.ifBlank { "0" }.toDouble()
+            s.diversCost.ifBlank { "0" }.toDouble()
             true
         } catch (e: NumberFormatException) {
             _state.value = s.copy(error = "Veuillez entrer des montants valides")
@@ -137,7 +157,11 @@ class SetupViewModel @Inject constructor(
                 monthlyFee = s.monthlyFee.toDoubleOrNull() ?: 0.0,
                 conciergeSalary = s.conciergeSalary.toDoubleOrNull() ?: 0.0,
                 cleaningCost = s.cleaningCost.toDoubleOrNull() ?: 0.0,
-                maintenanceCost = s.maintenanceCost.toDoubleOrNull() ?: 0.0,
+                electricityCost = s.electricityCost.toDoubleOrNull() ?: 0.0,
+                waterCost = s.waterCost.toDoubleOrNull() ?: 0.0,
+                elevatorCost = s.elevatorCost.toDoubleOrNull() ?: 0.0,
+                insuranceCost = s.insuranceCost.toDoubleOrNull() ?: 0.0,
+                diversCost = s.diversCost.toDoubleOrNull() ?: 0.0,
                 masterPinHash = SecurityUtils.hashPin(s.masterPin),
                 isSetupComplete = true
             )

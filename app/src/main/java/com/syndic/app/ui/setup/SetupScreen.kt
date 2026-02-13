@@ -2,7 +2,9 @@ package com.syndic.app.ui.setup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,7 +47,8 @@ fun SetupScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(24.dp),
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -240,9 +243,33 @@ fun FinancialConfigStep(state: SetupState, viewModel: SetupViewModel) {
     )
 
     FinancialInput(
-        label = "Maintenance (Ascenseur, etc)",
-        value = state.maintenanceCost,
-        onValueChange = viewModel::onMaintenanceCostChange
+        label = "Électricité",
+        value = state.electricityCost,
+        onValueChange = viewModel::onElectricityCostChange
+    )
+
+    FinancialInput(
+        label = "Eau",
+        value = state.waterCost,
+        onValueChange = viewModel::onWaterCostChange
+    )
+
+    FinancialInput(
+        label = "Maintenance Ascenseur",
+        value = state.elevatorCost,
+        onValueChange = viewModel::onElevatorCostChange
+    )
+
+    FinancialInput(
+        label = "Assurance",
+        value = state.insuranceCost,
+        onValueChange = viewModel::onInsuranceCostChange
+    )
+
+    FinancialInput(
+        label = "Frais Divers",
+        value = state.diversCost,
+        onValueChange = viewModel::onDiversCostChange
     )
 
     Spacer(modifier = Modifier.height(32.dp))
@@ -273,7 +300,8 @@ fun FinancialInput(label: String, value: String, onValueChange: (String) -> Unit
             unfocusedBorderColor = Color.Gray,
             focusedTextColor = Color.White,
             unfocusedTextColor = Color.White,
-            focusedLabelColor = CockpitCyan
+            focusedLabelColor = CockpitCyan,
+            unfocusedLabelColor = Color.Gray
         ),
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         singleLine = true
@@ -337,5 +365,9 @@ fun DetailRow(label: String, value: String) {
 private fun calculateTotalCosts(state: SetupState): Double {
     return (state.conciergeSalary.toDoubleOrNull() ?: 0.0) +
            (state.cleaningCost.toDoubleOrNull() ?: 0.0) +
-           (state.maintenanceCost.toDoubleOrNull() ?: 0.0)
+           (state.electricityCost.toDoubleOrNull() ?: 0.0) +
+           (state.waterCost.toDoubleOrNull() ?: 0.0) +
+           (state.elevatorCost.toDoubleOrNull() ?: 0.0) +
+           (state.insuranceCost.toDoubleOrNull() ?: 0.0) +
+           (state.diversCost.toDoubleOrNull() ?: 0.0)
 }

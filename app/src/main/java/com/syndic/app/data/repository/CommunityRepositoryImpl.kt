@@ -166,18 +166,24 @@ class CommunityRepositoryImpl @Inject constructor(
                 updatedAt = Date()
             )
             incidentDao.insertIncident(incident)
-            // Note: Incident Upload is handled by IncidentRepository logic usually, but here we are duplicating?
-            // Ideally CommunityRepository should replace IncidentRepository or delegate.
-            // Since we are in CommunityRepository, we should probably schedule upload here too if we want this to be the main entry point.
-            // For now, TEP Phase 8 asked to "Create CommunityRepository".
-            // I'll leave the upload logic simplified or assume `SyncIncidentsWorker` handles it if I added it there.
-            // But `SyncIncidentsWorker` uses `IncidentRepository`.
-            // Ideally `IncidentRepository` handles Incidents and `CommunityRepository` handles Blog?
-            // The TEP said "Create CommunityRepository to manage these flows".
-            // So `CommunityRepository` handles BOTH.
-            // I should migrate Sync/Upload logic for Incidents here too, or just focus on Blog for now to fix the "Partial" rating.
-            // The Reviewer said "Incidents... leverages existing IncidentRepository... This part is functional."
-            // So I won't break Incidents. I'll focus on fixing Blog Sync.
+
+            // Schedule Upload (Restoring immediate upload functionality from Phase 2)
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+
+            val uploadWork = OneTimeWorkRequestBuilder<com.syndic.app.worker.UploadIncidentWorker>()
+                .setInputData(workDataOf("incident_id" to incident.id))
+                .setConstraints(constraints)
+                .setBackoffCriteria(
+                    BackoffPolicy.EXPONENTIAL,
+                    WorkRequest.MIN_BACKOFF_MILLIS,
+                    TimeUnit.MILLISECONDS
+                )
+                .build()
+
+            workManager.enqueue(uploadWork)
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

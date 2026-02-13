@@ -113,6 +113,9 @@ dependencies {
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 

@@ -73,10 +73,11 @@ fun CockpitScreen(
 
                 val runway = dashboardState.runwayMonths
                 val runwayEmoji = when {
-                    runway >= 6 -> "😎"
-                    runway >= 3 -> "🙂"
-                    runway >= 1 -> "😐"
-                    else -> "😱"
+                    runway > 6 -> "🤩" // > 6 months
+                    runway > 3 -> "🙂" // > 3 months
+                    runway > 1 -> "😐" // > 1 month
+                    runway >= 0 -> "😨" // < 1 month (but positive)
+                    else -> "💀"       // Negative (Debt)
                 }
 
                 KpiCard(
@@ -100,7 +101,7 @@ fun CockpitScreen(
             ) {
                 KpiCard(
                     title = "MAGAZINE",
-                    value = "BLOG", // Placeholder value, could be post count
+                    value = "BLOG",
                     borderColor = Slate, // Neutral
                     icon = "📰",
                     modifier = Modifier.weight(1f),

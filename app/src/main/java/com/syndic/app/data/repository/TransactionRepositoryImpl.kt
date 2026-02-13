@@ -63,8 +63,11 @@ class TransactionRepositoryImpl @Inject constructor(
         val monthlyBurn = if (config != null) {
             config.conciergeSalary +
             config.cleaningCost +
-            config.maintenanceCost +
-            config.otherFixedCosts
+            config.electricityCost +
+            config.waterCost +
+            config.elevatorCost +
+            config.insuranceCost +
+            config.diversCost
         } else {
             0.0
         }

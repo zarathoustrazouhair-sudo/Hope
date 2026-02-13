@@ -17,8 +17,14 @@ data class SetupState(
     val residenceName: String = "",
     val masterPin: String = "",
     val masterPinConfirm: String = "",
+
+    // Financial Inputs (Strings for easier editing)
     val monthlyFee: String = "",
     val conciergeSalary: String = "",
     val cleaningCost: String = "",
-    val maintenanceCost: String = ""
+    val electricityCost: String = "",
+    val waterCost: String = "",
+    val elevatorCost: String = "",
+    val insuranceCost: String = "",
+    val diversCost: String = "" // Maintenance/Divers
 )
