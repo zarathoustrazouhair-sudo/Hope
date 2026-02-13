@@ -14,6 +14,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.syndic.app.ui.theme.CockpitGold
 import com.syndic.app.ui.theme.NightBlue
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResidentDetailScreen(
     apartment: String,
