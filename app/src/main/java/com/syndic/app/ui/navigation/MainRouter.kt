@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.syndic.app.data.local.entity.UserRole
 import com.syndic.app.ui.auth.AuthViewModel
+import com.syndic.app.ui.community.blog.BlogScreen
+import com.syndic.app.ui.community.incident.IncidentsScreen
 import com.syndic.app.ui.dashboard.CockpitScreen
 import com.syndic.app.ui.finance.FinanceScreen
 import com.syndic.app.ui.login.LoginScreen
@@ -26,7 +28,9 @@ import com.syndic.app.ui.setup.SetupScreen
 enum class RouterDest {
     DASHBOARD,
     CHANGE_PIN,
-    FINANCE
+    FINANCE,
+    INCIDENTS,
+    BLOG
 }
 
 @Composable
@@ -65,19 +69,49 @@ fun MainRouter(
         // Role Dispatcher (Authenticated and Configured)
         when (authState.userRole) {
             UserRole.SYNDIC, UserRole.ADJOINT -> {
-                if (currentDest == RouterDest.FINANCE) {
-                    BackHandler { currentDest = RouterDest.DASHBOARD }
-                    FinanceScreen()
-                } else {
-                    CockpitScreen(onFinanceClick = { currentDest = RouterDest.FINANCE })
+                when (currentDest) {
+                    RouterDest.FINANCE -> {
+                        BackHandler { currentDest = RouterDest.DASHBOARD }
+                        FinanceScreen()
+                    }
+                    RouterDest.INCIDENTS -> {
+                        BackHandler { currentDest = RouterDest.DASHBOARD }
+                        IncidentsScreen()
+                    }
+                    RouterDest.BLOG -> {
+                        BackHandler { currentDest = RouterDest.DASHBOARD }
+                        BlogScreen()
+                    }
+                    else -> {
+                        CockpitScreen(
+                            onFinanceClick = { currentDest = RouterDest.FINANCE },
+                            onIncidentsClick = { currentDest = RouterDest.INCIDENTS },
+                            onBlogClick = { currentDest = RouterDest.BLOG }
+                        )
+                    }
                 }
             }
             UserRole.RESIDENT -> {
-                if (currentDest == RouterDest.CHANGE_PIN) {
-                    BackHandler { currentDest = RouterDest.DASHBOARD }
-                    ChangePinScreen(onBack = { currentDest = RouterDest.DASHBOARD })
-                } else {
-                    ResidentHomeScreen(onChangePinClick = { currentDest = RouterDest.CHANGE_PIN })
+                when (currentDest) {
+                    RouterDest.CHANGE_PIN -> {
+                        BackHandler { currentDest = RouterDest.DASHBOARD }
+                        ChangePinScreen(onBack = { currentDest = RouterDest.DASHBOARD })
+                    }
+                    RouterDest.BLOG -> {
+                        BackHandler { currentDest = RouterDest.DASHBOARD }
+                        BlogScreen()
+                    }
+                    RouterDest.INCIDENTS -> {
+                        BackHandler { currentDest = RouterDest.DASHBOARD }
+                        IncidentsScreen()
+                    }
+                    else -> {
+                        ResidentHomeScreen(
+                            onChangePinClick = { currentDest = RouterDest.CHANGE_PIN },
+                            onBlogClick = { currentDest = RouterDest.BLOG },
+                            onIncidentsClick = { currentDest = RouterDest.INCIDENTS }
+                        )
+                    }
                 }
             }
             UserRole.CONCIERGE -> {

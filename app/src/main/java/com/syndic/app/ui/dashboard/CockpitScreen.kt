@@ -26,7 +26,6 @@ import com.syndic.app.ui.components.CockpitHeader
 import com.syndic.app.ui.components.KpiCard
 import com.syndic.app.ui.components.RecoveryGauge
 import com.syndic.app.ui.components.ResidentMatrixGrid
-import com.syndic.app.ui.incident.IncidentViewModel
 import com.syndic.app.ui.matrix.MatrixViewModel
 import com.syndic.app.ui.theme.CyanNeon
 import com.syndic.app.ui.theme.Gold
@@ -36,13 +35,13 @@ import com.syndic.app.ui.theme.Slate
 @Composable
 fun CockpitScreen(
     onFinanceClick: () -> Unit = {},
+    onIncidentsClick: () -> Unit = {},
+    onBlogClick: () -> Unit = {},
     dashboardViewModel: DashboardViewModel = hiltViewModel(),
-    matrixViewModel: MatrixViewModel = hiltViewModel(),
-    incidentViewModel: IncidentViewModel = hiltViewModel()
+    matrixViewModel: MatrixViewModel = hiltViewModel()
 ) {
     val dashboardState by dashboardViewModel.uiState.collectAsState()
     val matrixState by matrixViewModel.state.collectAsState()
-    val incidentState by incidentViewModel.uiState.collectAsState()
 
     Scaffold(
         bottomBar = { BottomNavBar() },
@@ -100,14 +99,15 @@ fun CockpitScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 KpiCard(
-                    title = "TÂCHES",
-                    value = "0", // Placeholder
+                    title = "MAGAZINE",
+                    value = "BLOG", // Placeholder value, could be post count
                     borderColor = Slate, // Neutral
+                    icon = "📰",
                     modifier = Modifier.weight(1f),
-                    onClick = {}
+                    onClick = onBlogClick
                 )
 
-                val incidentCount = incidentState.incidents.size
+                val incidentCount = dashboardState.openIncidentsCount
                 val incidentBorderColor = if (incidentCount > 0) RoseNeon else Slate
 
                 KpiCard(
@@ -115,7 +115,7 @@ fun CockpitScreen(
                     value = "$incidentCount",
                     borderColor = incidentBorderColor,
                     modifier = Modifier.weight(1f),
-                    onClick = {}
+                    onClick = onIncidentsClick
                 )
             }
 

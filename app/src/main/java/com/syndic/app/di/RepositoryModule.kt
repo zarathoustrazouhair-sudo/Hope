@@ -1,9 +1,11 @@
 package com.syndic.app.di
 
+import com.syndic.app.data.repository.CommunityRepositoryImpl
 import com.syndic.app.data.repository.ConfigRepositoryImpl
 import com.syndic.app.data.repository.IncidentRepositoryImpl
 import com.syndic.app.data.repository.TransactionRepositoryImpl
 import com.syndic.app.data.repository.UserRepositoryImpl
+import com.syndic.app.domain.repository.CommunityRepository
 import com.syndic.app.domain.repository.ConfigRepository
 import com.syndic.app.domain.repository.IncidentRepository
 import com.syndic.app.domain.repository.TransactionRepository
@@ -41,4 +43,10 @@ abstract class RepositoryModule {
     abstract fun bindConfigRepository(
         configRepositoryImpl: ConfigRepositoryImpl
     ): ConfigRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCommunityRepository(
+        communityRepositoryImpl: CommunityRepositoryImpl
+    ): CommunityRepository
 }

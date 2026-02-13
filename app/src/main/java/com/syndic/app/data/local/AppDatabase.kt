@@ -4,10 +4,12 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.syndic.app.data.local.converter.RoomTypeConverters
+import com.syndic.app.data.local.dao.BlogDao
 import com.syndic.app.data.local.dao.IncidentDao
 import com.syndic.app.data.local.dao.ResidenceConfigDao
 import com.syndic.app.data.local.dao.TransactionDao
 import com.syndic.app.data.local.dao.UserDao
+import com.syndic.app.data.local.entity.BlogPostEntity
 import com.syndic.app.data.local.entity.IncidentEntity
 import com.syndic.app.data.local.entity.ResidenceConfigEntity
 import com.syndic.app.data.local.entity.TransactionEntity
@@ -18,9 +20,10 @@ import com.syndic.app.data.local.entity.UserEntity
         UserEntity::class,
         IncidentEntity::class,
         ResidenceConfigEntity::class,
-        TransactionEntity::class
+        TransactionEntity::class,
+        BlogPostEntity::class
     ],
-    version = 5, // Bumped for TransactionEntity changes (Phase 5 Finance)
+    version = 6, // Bumped for Phase 8 Community Engine (BlogPostEntity)
     exportSchema = false
 )
 @TypeConverters(RoomTypeConverters::class)
@@ -29,4 +32,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun incidentDao(): IncidentDao
     abstract fun residenceConfigDao(): ResidenceConfigDao
     abstract fun transactionDao(): TransactionDao
+    abstract fun blogDao(): BlogDao
 }
